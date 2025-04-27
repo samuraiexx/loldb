@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>loldb - League of Legends Statistics & Insights</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
+</head>
+
+<body>
+  <header>
+    <div class="container">
+      <h1>loldb</h1>
+      <p class="tagline">Advanced League of Legends Statistics & Insights Database for Developers</p>
+      <nav>
+        <ul>
+          <li><a href="#about">About</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#data">Data</a></li>
+          <li><a href="#technical">Technical Info</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section id="hero" class="hero">
+    <div class="container">
+      <h2>Unlock the Power of Data in League of Legends</h2>
+      <p>Comprehensive statistics, deep gameplay insights, and performance correlations extracted from thousands of
+        matches</p>
+      <div class="cta-buttons">
+        <a href="#features" class="btn btn-primary">Explore Features</a>
+        <a href="#about" class="btn btn-secondary">Learn More</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="section">
+    <div class="container">
+      <h2>About loldb</h2>
+      <p>loldb is a public statistical analysis and insights database designed for developers and data analysts in the
+        League of Legends community. Our primary goal is to enhance player experience by providing comprehensive
+        statistics, deep gameplay insights, and performance correlations extracted from a large dataset of matches.</p>
+      <p>By leveraging Riot Games APIs (including Match-V5, Summoner, and Champion APIs), loldb aggregates detailed
+        match timelines, player behaviors, and objective events to offer novel insights into the game mechanics and
+        strategies.</p>
+      <p><strong>Important:</strong> This database is a technical resource intended for developers and data scientists
+        with programming knowledge. Accessing and analyzing the data requires familiarity with programming languages
+        like Python or R, and data analysis techniques.</p>
+    </div>
+  </section>
+
+  <section id="features" class="section features">
+    <div class="container">
+      <h2>Features</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📈</div>
+          <h3>Advanced Statistics</h3>
+          <p>Dive deep into comprehensive match statistics and player performance metrics using your preferred data
+            analysis tools</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Vision Impact Analysis</h3>
+          <p>Understand the correlation between vision control and objective security through programmatic data analysis
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚔️</div>
+          <h3>Gameplay Patterns</h3>
+          <p>Discover winning strategies and game-changing patterns across different ranks by querying the database</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🏆</div>
+          <h3>Performance Correlation</h3>
+          <p>Analyze how specific in-game actions influence winning outcomes using statistical methods</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="data" class="section">
+    <div class="container">
+      <h2>Our Data</h2>
+      <p>loldb is building a comprehensive, publicly accessible database of League of Legends matches. All data
+        presented strictly adheres to Riot's policies, maintaining player anonymity and promoting positive player
+        experiences by focusing exclusively on constructive insights and improvement.</p>
+      <p>The raw data is provided in JSON format, requiring programming skills to effectively parse and analyze.</p>
+      <div class="data-highlights">
+        <div class="data-stat">
+          <span class="stat-number">90+</span>
+          <span class="stat-label">Match Files</span>
+        </div>
+        <div class="data-stat">
+          <span class="stat-number">1000s</span>
+          <span class="stat-label">Data Points</span>
+        </div>
+        <div class="data-stat">
+          <span class="stat-number">100%</span>
+          <span class="stat-label">Policy Compliant</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="technical" class="section">
+    <div class="container">
+      <h2>Technical Information</h2>
+      <div class="tech-info">
+        <div class="tech-card">
+          <h3>Required Skills</h3>
+          <ul>
+            <li>Programming (Python, R, or similar)</li>
+            <li>Data analysis and statistical methods</li>
+            <li>JSON data parsing</li>
+            <li>Experience with dataframes and data manipulation libraries</li>
+          </ul>
+        </div>
+        <div class="tech-card">
+          <h3>Data Format</h3>
+          <p>Data is provided in JSON format, following Riot Games API structure. Sample analysis notebooks are
+            available in our GitHub repository to help you get started.</p>
+          <pre><code>// Example of accessing match data
+import pandas as pd
+import json
+
+# Load match data
+with open('matches/NA1_4786663797.json', 'r') as f:
+    match_data = json.load(f
+    
+# Process and analyze
+# ...</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="section">
+    <div class="container">
+      <h2>Contact Us</h2>
+      <p>Interested in learning more about loldb or have questions about our project? Reach out to us!</p>
+      <div class="contact-info">
+        <a href="https://github.com/samuraiexx/loldb" class="contact-link">GitHub Repository</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 loldb. All rights reserved.</p>
+      <p class="disclaimer">This is a technical database requiring programming knowledge for effective use. loldb isn't
+        endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in
+        producing or managing League of Legends.
+      </p>
+    </div>
+  </footer>
+</body>
+
+</html>
