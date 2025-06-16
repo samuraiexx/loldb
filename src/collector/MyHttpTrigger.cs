@@ -23,25 +23,24 @@ public class MyHttpTrigger
   {
     _logger.LogInformation("Starting League Data Collection orchestration");
 
-      var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("LeagueDataOrchestrator");
+    var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("LeagueDataOrchestrator");
 
-      _logger.LogInformation("Started orchestration with ID: {InstanceId}", instanceId);
+    _logger.LogInformation("Started orchestration with ID: {InstanceId}", instanceId);
 
-      var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
-      response.Headers.Add("Content-Type", "application/json");
+    var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
 
-      var responseBody = new
-      {
-        message = "League Data Collection started successfully",
-        instanceId = instanceId,
-        statusQueryGetUri = $"{req.Url.Scheme}://{req.Url.Host}/api/status/{instanceId}",
-        sendEventPostUri = $"{req.Url.Scheme}://{req.Url.Host}/runtime/webhooks/durabletask/instances/{instanceId}/raiseEvent/{{eventName}}",
-        terminatePostUri = $"{req.Url.Scheme}://{req.Url.Host}/runtime/webhooks/durabletask/instances/{instanceId}/terminate",
-        rewindPostUri = $"{req.Url.Scheme}://{req.Url.Host}/runtime/webhooks/durabletask/instances/{instanceId}/rewind"
-      };
+    var responseBody = new
+    {
+      message = "League Data Collection started successfully",
+      instanceId,
+      statusQueryGetUri = $"{req.Url.Scheme}://{req.Url.Host}/api/status/{instanceId}",
+      sendEventPostUri = $"{req.Url.Scheme}://{req.Url.Host}/runtime/webhooks/durabletask/instances/{instanceId}/raiseEvent/{{eventName}}",
+      terminatePostUri = $"{req.Url.Scheme}://{req.Url.Host}/runtime/webhooks/durabletask/instances/{instanceId}/terminate",
+      rewindPostUri = $"{req.Url.Scheme}://{req.Url.Host}/runtime/webhooks/durabletask/instances/{instanceId}/rewind"
+    };
 
-      await response.WriteAsJsonAsync(responseBody);
-      return response;
+    await response.WriteAsJsonAsync(responseBody);
+    return response;
   }
 
   [Function("GetOrchestrationStatus")]
