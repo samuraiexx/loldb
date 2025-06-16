@@ -23,8 +23,6 @@ public class MyHttpTrigger
   {
     _logger.LogInformation("Starting League Data Collection orchestration");
 
-    try
-    {
       var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("LeagueDataOrchestrator");
 
       _logger.LogInformation("Started orchestration with ID: {InstanceId}", instanceId);
@@ -44,14 +42,6 @@ public class MyHttpTrigger
 
       await response.WriteAsJsonAsync(responseBody);
       return response;
-    }
-    catch (Exception ex)
-    {
-      _logger.LogError(ex, "Error starting League Data Collection orchestration");
-      var errorResponse = req.CreateResponse(System.Net.HttpStatusCode.InternalServerError);
-      await errorResponse.WriteStringAsync("Internal server error");
-      return errorResponse;
-    }
   }
 
   [Function("GetOrchestrationStatus")]
