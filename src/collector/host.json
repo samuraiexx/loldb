@@ -3,16 +3,11 @@
   "logging": {
     "applicationInsights": {
       "samplingSettings": {
-        "isEnabled": true,
-        "excludedTypes": "Request"
-      },
-      "enableLiveMetricsFilters": true
+        "isEnabled": false
+      }
     },
     "logLevel": {
-      "default": "Information",
-      "Host.Aggregator": "Information",
-      "Host.Results": "Information",
-      "Function": "Information"
+      "default": "Information"
     }
   },
   "extensions": {

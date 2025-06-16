@@ -12,7 +12,7 @@ builder.ConfigureFunctionsWebApplication();
 
 // Configure services
 builder.Services
-    .AddApplicationInsightsTelemetryWorkerService()
+    .AddApplicationInsightsTelemetryWorkerService(options => { options.EnableAdaptiveSampling = false; })
     .ConfigureFunctionsApplicationInsights();
 
 builder.Logging.Services.Configure<LoggerFilterOptions>(options =>
