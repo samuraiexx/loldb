@@ -25,6 +25,17 @@ builder.Logging.Services.Configure<LoggerFilterOptions>(options =>
         {
             options.Rules.Remove(defaultRule);
         }
+
+        // Remove any generic rule that sets the minimum level to Warning
+        LoggerFilterRule? genericWarningRule = options.Rules.FirstOrDefault(rule => rule.ProviderName is null && rule.CategoryName is null && rule.LogLevel == LogLevel.Warning);
+
+        if (genericWarningRule is not null)
+        {
+            options.Rules.Remove(genericWarningRule);
+        }
+
+        // Ensure Information logs are captured
+        options.MinLevel = LogLevel.Information;
     });
 
 // Add HTTP client
