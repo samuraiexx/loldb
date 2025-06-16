@@ -57,7 +57,8 @@ public class CosmosDbService : ICosmosDbService
     if (_database == null)
     {
       throw new InvalidOperationException("Database not initialized. Call InitializeAsync first.");
-    }    _logger.LogInformation("Creating container for queue type: {QueueType}", queueType);
+    }
+    _logger.LogInformation("Creating container for queue type: {QueueType}", queueType);
 
     var containerResponse = await _database.CreateContainerIfNotExistsAsync(
         id: queueType,
