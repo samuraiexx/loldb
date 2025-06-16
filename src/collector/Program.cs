@@ -4,13 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using collector.Services;
 
 var builder = FunctionsApplication.CreateBuilder(args);
-
-// Add host.json as a configuration source
-builder.Configuration.AddJsonFile("host.json", optional: false, reloadOnChange: true);
 
 builder.ConfigureFunctionsWebApplication();
 
