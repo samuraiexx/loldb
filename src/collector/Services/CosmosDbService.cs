@@ -7,7 +7,7 @@ namespace collector.Services;
 
 public interface ICosmosDbService
 {
-  Task<PlayerStatsDocument?> GetPlayerStatsAsync(string puuid, string queueType);
+  Task<PlayerStatsDocument?> GetPlayerStatsAsync(string puuid, string queueType, string region);
   Task UpsertPlayerStatsAsync(PlayerStatsDocument playerStats, string queueType);
   Task<bool> InitializeAsync();
 }
@@ -70,13 +70,12 @@ public class CosmosDbService : ICosmosDbService
     _logger.LogInformation("Container '{ContainerName}' ready", queueType);
     return container;
   }
-
-  public async Task<PlayerStatsDocument?> GetPlayerStatsAsync(string puuid, string queueType)
+  public async Task<PlayerStatsDocument?> GetPlayerStatsAsync(string puuid, string queueType, string region)
   {
     try
     {
       var container = await GetContainerAsync(queueType);
-      var response = await container.ReadItemAsync<PlayerStatsDocument>(puuid, new PartitionKey(puuid));
+      var response = await container.ReadItemAsync<PlayerStatsDocument>(puuid, new PartitionKey(region));
       return response.Resource;
     }
     catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -85,7 +84,7 @@ public class CosmosDbService : ICosmosDbService
     }
     catch (Exception ex)
     {
-      _logger.LogError(ex, "Error getting player stats for {Puuid} in {QueueType}", puuid, queueType);
+      _logger.LogError(ex, "Error getting player stats for {Puuid} in {QueueType} for region {Region}", puuid, queueType, region);
       throw;
     }
   }

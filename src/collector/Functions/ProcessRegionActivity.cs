@@ -164,7 +164,7 @@ public class ProcessRegionActivity
       try
       {
         // Get existing player stats or create new
-        var existingStats = await _cosmosDbService.GetPlayerStatsAsync(entry.Puuid, queueType);
+        var existingStats = await _cosmosDbService.GetPlayerStatsAsync(entry.Puuid, queueType, region);
 
         var playerStats = existingStats ?? new PlayerStatsDocument
         {
