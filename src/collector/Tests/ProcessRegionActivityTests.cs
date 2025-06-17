@@ -82,7 +82,7 @@ public class ProcessRegionActivityTests
         .ReturnsAsync((new List<LeagueEntryDTO>(), rateLimitInfo));
 
     _mockCosmosDbService
-        .Setup(s => s.GetPlayerStatsAsync("test-puuid", "RANKED_SOLO_5x5"))
+        .Setup(s => s.GetPlayerStatsAsync("test-puuid", "RANKED_SOLO_5x5", "NA1"))
         .ReturnsAsync((PlayerStatsDocument?)null);
 
     _mockCosmosDbService
