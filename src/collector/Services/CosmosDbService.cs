@@ -113,7 +113,7 @@ public class CosmosDbService : ICosmosDbService
     }
 
     var container = await GetContainerAsync(queueType);
-    const int batchSize = 100; // Cosmos DB batch operation limit
+    const int batchSize = 50; // Cosmos DB batch operation limit / 2
     var batches = playerStatsList
         .Select((item, index) => new { item, index })
         .GroupBy(x => x.index / batchSize)
