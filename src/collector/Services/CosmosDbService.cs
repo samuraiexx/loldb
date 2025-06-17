@@ -9,6 +9,7 @@ public interface ICosmosDbService
 {
   Task<PlayerStatsDocument?> GetPlayerStatsAsync(string puuid, string queueType, string region);
   Task UpsertPlayerStatsAsync(PlayerStatsDocument playerStats, string queueType);
+  Task BatchUpsertPlayerStatsAsync(List<PlayerStatsDocument> playerStatsList, string queueType, string region);
   Task<bool> InitializeAsync();
 }
 
@@ -88,7 +89,6 @@ public class CosmosDbService : ICosmosDbService
       throw;
     }
   }
-
   public async Task UpsertPlayerStatsAsync(PlayerStatsDocument playerStats, string queueType)
   {
     try
@@ -100,6 +100,74 @@ public class CosmosDbService : ICosmosDbService
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error upserting player stats for {Puuid} in {QueueType}", playerStats.Puuid, queueType);
+      throw;
+    }
+  }
+
+  public async Task BatchUpsertPlayerStatsAsync(List<PlayerStatsDocument> playerStatsList, string queueType, string region)
+  {
+    if (!playerStatsList.Any())
+    {
+      _logger.LogDebug("No player stats to batch upsert");
+      return;
+    }
+
+    try
+    {
+      var container = await GetContainerAsync(queueType);
+      const int batchSize = 100; // Cosmos DB batch operation limit
+      var batches = playerStatsList
+          .Select((item, index) => new { item, index })
+          .GroupBy(x => x.index / batchSize)
+          .Select(g => g.Select(x => x.item).ToList())
+          .ToList();
+
+      _logger.LogInformation("Batch upserting {TotalCount} player stats in {BatchCount} batches for {QueueType} in {Region}",
+          playerStatsList.Count, batches.Count, queueType, region);
+
+      var totalProcessed = 0;
+      var totalErrors = 0;
+
+      foreach (var batch in batches)
+      {
+        try
+        {
+          var transactionalBatch = container.CreateTransactionalBatch(new PartitionKey(region));
+
+          foreach (var playerStats in batch)
+          {
+            transactionalBatch.UpsertItem(playerStats);
+          }
+
+          var batchResponse = await transactionalBatch.ExecuteAsync();
+
+          if (batchResponse.IsSuccessStatusCode)
+          {
+            totalProcessed += batch.Count;
+            _logger.LogDebug("Successfully batch upserted {Count} player stats for {QueueType} in {Region}",
+                batch.Count, queueType, region);
+          }
+          else
+          {
+            _logger.LogError("Batch upsert failed with status code: {StatusCode} for {QueueType} in {Region}",
+                batchResponse.StatusCode, queueType, region);
+            totalErrors += batch.Count;
+          }
+        }
+        catch (Exception ex)
+        {
+          _logger.LogError(ex, "Error in batch upsert for {Count} items in {QueueType} for {Region}",
+              batch.Count, queueType, region);
+          totalErrors += batch.Count;
+        }
+      }
+
+      _logger.LogInformation("Batch upsert completed for {QueueType} in {Region}. Processed: {Processed}, Errors: {Errors}",
+          queueType, region, totalProcessed, totalErrors);
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Error in batch upsert operation for {QueueType} in {Region}", queueType, region);
       throw;
     }
   }

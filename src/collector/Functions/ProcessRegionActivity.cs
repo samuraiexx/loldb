@@ -95,10 +95,8 @@ public class ProcessRegionActivity
                 state.Region, state.QueueType, state.Tier, state.Division);
             currentState.IsCompleted = true;
             break;
-          }
-
-          // Process and save entries
-          await ProcessAndSaveEntries(entries, state.QueueType, state.Region);
+          }          // Process and save entries
+          await ProcessAndSaveEntriesBatch(entries, state.QueueType, state.Region);
 
           stateEntriesProcessed += entries.Count;
           currentPage++;
@@ -153,9 +151,12 @@ public class ProcessRegionActivity
       return regionStates;
     }
   }
-
-  private async Task ProcessAndSaveEntries(List<LeagueEntryDTO> entries, string queueType, string region)
+  private async Task ProcessAndSaveEntriesBatch(List<LeagueEntryDTO> entries, string queueType, string region)
   {
+    _logger.LogDebug("Processing {Count} entries for batch upsert in {QueueType} for {Region}",
+        entries.Count, queueType, region);
+
+    var playerStatsDocuments = new List<PlayerStatsDocument>();
     var processed = 0;
     var errors = 0;
 
@@ -163,10 +164,8 @@ public class ProcessRegionActivity
     {
       try
       {
-        // Get existing player stats or create new
-        var existingStats = await _cosmosDbService.GetPlayerStatsAsync(entry.Puuid, queueType, region);
-
-        var playerStats = existingStats ?? new PlayerStatsDocument
+        // Create new player stats document with single snapshot
+        var playerStats = new PlayerStatsDocument
         {
           Id = entry.Puuid,
           Puuid = entry.Puuid,
@@ -174,43 +173,54 @@ public class ProcessRegionActivity
           LeagueId = entry.LeagueId,
           Region = region,
           CreatedAt = DateTime.UtcNow,
-          Snapshots = new List<PlayerSnapshot>()
+          LastUpdated = DateTime.UtcNow,
+          Snapshot = new PlayerSnapshot
+          {
+            Timestamp = DateTime.UtcNow,
+            Tier = entry.Tier,
+            Rank = entry.Rank,
+            LeaguePoints = entry.LeaguePoints,
+            Wins = entry.Wins,
+            Losses = entry.Losses,
+            HotStreak = entry.HotStreak,
+            Veteran = entry.Veteran,
+            FreshBlood = entry.FreshBlood,
+            Inactive = entry.Inactive,
+            MiniSeries = entry.MiniSeries
+          }
         };
 
-        // Create new snapshot
-        var snapshot = new PlayerSnapshot
-        {
-          Timestamp = DateTime.UtcNow,
-          Tier = entry.Tier,
-          Rank = entry.Rank,
-          LeaguePoints = entry.LeaguePoints,
-          Wins = entry.Wins,
-          Losses = entry.Losses,
-          HotStreak = entry.HotStreak,
-          Veteran = entry.Veteran,
-          FreshBlood = entry.FreshBlood,
-          Inactive = entry.Inactive,
-          MiniSeries = entry.MiniSeries
-        };
-
-        // Add snapshot to player stats
-        playerStats.Snapshots.Add(snapshot);
-        playerStats.LastUpdated = DateTime.UtcNow;
-
-        // Save to Cosmos DB
-        await _cosmosDbService.UpsertPlayerStatsAsync(playerStats, queueType);
-
+        playerStatsDocuments.Add(playerStats);
         processed++;
       }
       catch (Exception ex)
       {
-        _logger.LogError(ex, "Error processing entry for player {Puuid} in {QueueType}",
+        _logger.LogError(ex, "Error creating player stats document for player {Puuid} in {QueueType}",
             entry.Puuid, queueType);
         errors++;
       }
     }
 
-    _logger.LogDebug("Processed {Processed} entries, {Errors} errors for {QueueType} in {Region}",
-        processed, errors, queueType, region);
+    // Batch upsert all documents
+    if (playerStatsDocuments.Any())
+    {
+      try
+      {
+        await _cosmosDbService.BatchUpsertPlayerStatsAsync(playerStatsDocuments, queueType, region);
+        _logger.LogDebug("Batch processed {Processed} entries, {Errors} errors for {QueueType} in {Region}",
+            processed, errors, queueType, region);
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError(ex, "Error in batch upsert for {Count} documents in {QueueType} for {Region}",
+            playerStatsDocuments.Count, queueType, region);
+        throw;
+      }
+    }
+    else
+    {
+      _logger.LogWarning("No valid player stats documents to batch upsert for {QueueType} in {Region}",
+          queueType, region);
+    }
   }
 }

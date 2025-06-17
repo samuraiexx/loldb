@@ -115,15 +115,21 @@ public class ValidationScript
 
   private static void ValidateDataModels()
   {
-    Console.WriteLine("🔍 Validating Data Models...");
-
-    // Test PlayerStatsDocument
+    Console.WriteLine("🔍 Validating Data Models...");    // Test PlayerStatsDocument
     var document = new PlayerStatsDocument
     {
       Id = "test-id",
       Puuid = "test-puuid",
       Region = "NA1",
-      Snapshots = new List<PlayerSnapshot>()
+      Snapshot = new PlayerSnapshot
+      {
+        Timestamp = DateTime.UtcNow,
+        Tier = "GOLD",
+        Rank = "I",
+        LeaguePoints = 50,
+        Wins = 10,
+        Losses = 5
+      }
     };
 
     if (string.IsNullOrEmpty(document.Id) || string.IsNullOrEmpty(document.Puuid))

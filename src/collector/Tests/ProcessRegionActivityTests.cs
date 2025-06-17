@@ -79,14 +79,12 @@ public class ProcessRegionActivityTests
     // Return empty entries for page 2 to simulate completion
     _mockRiotApiService
         .Setup(s => s.GetLeagueEntriesAsync("NA1", "RANKED_SOLO_5x5", "GOLD", "I", 2))
-        .ReturnsAsync((new List<LeagueEntryDTO>(), rateLimitInfo));
-
-    _mockCosmosDbService
+        .ReturnsAsync((new List<LeagueEntryDTO>(), rateLimitInfo)); _mockCosmosDbService
         .Setup(s => s.GetPlayerStatsAsync("test-puuid", "RANKED_SOLO_5x5", "NA1"))
         .ReturnsAsync((PlayerStatsDocument?)null);
 
     _mockCosmosDbService
-        .Setup(s => s.UpsertPlayerStatsAsync(It.IsAny<PlayerStatsDocument>(), "RANKED_SOLO_5x5"))
+        .Setup(s => s.BatchUpsertPlayerStatsAsync(It.IsAny<List<PlayerStatsDocument>>(), "RANKED_SOLO_5x5", "NA1"))
         .Returns(Task.CompletedTask);
 
     // Act
@@ -96,11 +94,9 @@ public class ProcessRegionActivityTests
     Assert.Single(result);
     Assert.True(result[0].IsCompleted);
     Assert.Equal(1, result[0].TotalProcessed);
-    Assert.Equal(2, result[0].Page);
-
-    _mockRiotApiService.Verify(s => s.GetLeagueEntriesAsync("NA1", "RANKED_SOLO_5x5", "GOLD", "I", 1), Times.Once);
+    Assert.Equal(2, result[0].Page); _mockRiotApiService.Verify(s => s.GetLeagueEntriesAsync("NA1", "RANKED_SOLO_5x5", "GOLD", "I", 1), Times.Once);
     _mockRiotApiService.Verify(s => s.GetLeagueEntriesAsync("NA1", "RANKED_SOLO_5x5", "GOLD", "I", 2), Times.Once);
-    _mockCosmosDbService.Verify(s => s.UpsertPlayerStatsAsync(It.IsAny<PlayerStatsDocument>(), "RANKED_SOLO_5x5"), Times.Once);
+    _mockCosmosDbService.Verify(s => s.BatchUpsertPlayerStatsAsync(It.IsAny<List<PlayerStatsDocument>>(), "RANKED_SOLO_5x5", "NA1"), Times.Once);
   }
 
   [Fact]

@@ -112,8 +112,8 @@ public class PlayerStatsDocument
   [JsonProperty("league_id")]
   public string LeagueId { get; set; } = string.Empty;
 
-  [JsonProperty("snapshots")]
-  public List<PlayerSnapshot> Snapshots { get; set; } = new();
+  [JsonProperty("snapshot")]
+  public PlayerSnapshot? Snapshot { get; set; }
 
   [JsonProperty("created_at")]
   public DateTime CreatedAt { get; set; }

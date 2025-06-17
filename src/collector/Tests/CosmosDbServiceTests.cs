@@ -62,7 +62,6 @@ public class CosmosDbServiceTests
     // Assert
     Assert.False(result);
   }
-
   [Fact]
   public void PlayerStatsDocument_SerializesCorrectly()
   {
@@ -76,29 +75,26 @@ public class CosmosDbServiceTests
       Region = "NA1",
       CreatedAt = DateTime.UtcNow,
       LastUpdated = DateTime.UtcNow,
-      Snapshots = new List<PlayerSnapshot>
-            {
-                new PlayerSnapshot
-                {
-                    Timestamp = DateTime.UtcNow,
-                    Tier = "GOLD",
-                    Rank = "I",
-                    LeaguePoints = 50,
-                    Wins = 10,
-                    Losses = 5,
-                    HotStreak = false,
-                    Veteran = false,
-                    FreshBlood = true,
-                    Inactive = false
-                }
-            }
+      Snapshot = new PlayerSnapshot
+      {
+        Timestamp = DateTime.UtcNow,
+        Tier = "GOLD",
+        Rank = "I",
+        LeaguePoints = 50,
+        Wins = 10,
+        Losses = 5,
+        HotStreak = false,
+        Veteran = false,
+        FreshBlood = true,
+        Inactive = false
+      }
     };
 
     // Act & Assert
     Assert.Equal("test-puuid", document.Id);
     Assert.Equal("NA1", document.Region);
-    Assert.Single(document.Snapshots);
-    Assert.Equal("GOLD", document.Snapshots[0].Tier);
+    Assert.NotNull(document.Snapshot);
+    Assert.Equal("GOLD", document.Snapshot.Tier);
   }
 
   [Fact]
@@ -145,5 +141,54 @@ public class CosmosDbServiceTests
     Assert.Equal(54, rateLimitInfo.CurrentRequestsPer2Minutes);
     Assert.Equal(8, rateLimitInfo.RetryAfterSeconds);
     Assert.True(rateLimitInfo.IsRateLimited);
+  }
+
+  [Fact]
+  public async Task BatchUpsertPlayerStatsAsync_WithEmptyList_ReturnsEarly()
+  {
+    // Arrange
+    var emptyList = new List<PlayerStatsDocument>();
+
+    // Act & Assert - should not throw
+    await _service.BatchUpsertPlayerStatsAsync(emptyList, "RANKED_SOLO_5x5", "NA1");
+  }
+
+  [Fact]
+  public void PlayerStatsDocument_WithSingleSnapshot_SerializesCorrectly()
+  {
+    // Arrange
+    var document = new PlayerStatsDocument
+    {
+      Id = "test-puuid",
+      SummonerId = "test-summoner-id",
+      Puuid = "test-puuid",
+      LeagueId = "test-league-id",
+      Region = "NA1",
+      CreatedAt = DateTime.UtcNow,
+      LastUpdated = DateTime.UtcNow,
+      Snapshot = new PlayerSnapshot
+      {
+        Timestamp = DateTime.UtcNow,
+        Tier = "DIAMOND",
+        Rank = "II",
+        LeaguePoints = 75,
+        Wins = 25,
+        Losses = 10,
+        HotStreak = true,
+        Veteran = true,
+        FreshBlood = false,
+        Inactive = false
+      }
+    };
+
+    // Act & Assert
+    Assert.Equal("test-puuid", document.Id);
+    Assert.Equal("NA1", document.Region);
+    Assert.NotNull(document.Snapshot);
+    Assert.Equal("DIAMOND", document.Snapshot.Tier);
+    Assert.Equal("II", document.Snapshot.Rank);
+    Assert.Equal(75, document.Snapshot.LeaguePoints);
+    Assert.True(document.Snapshot.HotStreak);
+    Assert.True(document.Snapshot.Veteran);
   }
 }
