@@ -112,68 +112,51 @@ public class CosmosDbService : ICosmosDbService
       return;
     }
 
-    try
+    var container = await GetContainerAsync(queueType);
+    const int batchSize = 100; // Cosmos DB batch operation limit
+    var batches = playerStatsList
+        .Select((item, index) => new { item, index })
+        .GroupBy(x => x.index / batchSize)
+        .Select(g => g.Select(x => x.item).ToList())
+        .ToList();
+
+    _logger.LogInformation("Batch upserting {TotalCount} player stats in {BatchCount} batches for {QueueType} in {Region}",
+        playerStatsList.Count, batches.Count, queueType, region);
+
+    var totalProcessed = 0;
+    var totalErrors = 0;
+
+    foreach (var batch in batches)
     {
-      var container = await GetContainerAsync(queueType);
-      const int batchSize = 100; // Cosmos DB batch operation limit
-      var batches = playerStatsList
-          .Select((item, index) => new { item, index })
-          .GroupBy(x => x.index / batchSize)
-          .Select(g => g.Select(x => x.item).ToList())
-          .ToList();
+      var transactionalBatch = container.CreateTransactionalBatch(new PartitionKey(region));
 
-      _logger.LogInformation("Batch upserting {TotalCount} player stats in {BatchCount} batches for {QueueType} in {Region}",
-          playerStatsList.Count, batches.Count, queueType, region);
-
-      var totalProcessed = 0;
-      var totalErrors = 0;
-
-      foreach (var batch in batches)
+      foreach (var playerStats in batch)
       {
-        try
-        {
-          var transactionalBatch = container.CreateTransactionalBatch(new PartitionKey(region));
-
-          foreach (var playerStats in batch)
-          {
-            transactionalBatch.UpsertItem(playerStats);
-          }
-
-          var batchResponse = await transactionalBatch.ExecuteAsync();
-
-          if (batchResponse.IsSuccessStatusCode)
-          {
-            totalProcessed += batch.Count;
-            _logger.LogDebug("Successfully batch upserted {Count} player stats for {QueueType} in {Region}",
-                batch.Count, queueType, region);
-          }
-          else
-          {
-            _logger.LogError("Batch upsert failed with status code: {StatusCode} for {QueueType} in {Region}",
-                batchResponse.StatusCode, queueType, region);
-            totalErrors += batch.Count;
-          }
-        }
-        catch (Exception ex)
-        {
-          _logger.LogError(ex, "Error in batch upsert for {Count} items in {QueueType} for {Region}",
-              batch.Count, queueType, region);
-          totalErrors += batch.Count;
-        }
+        transactionalBatch.UpsertItem(playerStats);
       }
 
-      _logger.LogInformation("Batch upsert completed for {QueueType} in {Region}. Processed: {Processed}, Errors: {Errors}",
-          queueType, region, totalProcessed, totalErrors);
-      
-      if (totalErrors > 0)
+      var batchResponse = await transactionalBatch.ExecuteAsync();
+
+      if (batchResponse.IsSuccessStatusCode)
       {
-        throw new Exception($"Batch upsert completed with {totalErrors} errors for {queueType} in {region}");
+        totalProcessed += batch.Count;
+        _logger.LogDebug("Successfully batch upserted {Count} player stats for {QueueType} in {Region}",
+            batch.Count, queueType, region);
+      }
+      else
+      {
+        _logger.LogError("Batch upsert failed with status code: {StatusCode} for {QueueType} in {Region}",
+            batchResponse.StatusCode, queueType, region);
+        totalErrors += batch.Count;
       }
     }
-    catch (Exception ex)
+
+    _logger.LogInformation("Batch upsert completed for {QueueType} in {Region}. Processed: {Processed}, Errors: {Errors}",
+        queueType, region, totalProcessed, totalErrors);
+
+    if (totalErrors > 0)
     {
-      _logger.LogError(ex, "Error in batch upsert operation for {QueueType} in {Region}", queueType, region);
-      throw;
+      throw new Exception($"Batch upsert completed with {totalErrors} errors for {queueType} in {region}");
     }
   }
 }
