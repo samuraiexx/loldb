@@ -164,6 +164,11 @@ public class CosmosDbService : ICosmosDbService
 
       _logger.LogInformation("Batch upsert completed for {QueueType} in {Region}. Processed: {Processed}, Errors: {Errors}",
           queueType, region, totalProcessed, totalErrors);
+      
+      if (totalErrors > 0)
+      {
+        throw new Exception($"Batch upsert completed with {totalErrors} errors for {queueType} in {region}");
+      }
     }
     catch (Exception ex)
     {
