@@ -29,9 +29,8 @@ public class ProcessRegionActivity
     _logger.LogInformation("Processing region {Region} with {StateCount} states", region, regionStates.Count);
 
     var updatedStates = new List<ProcessingState>();
-    var requestsInCurrentWindow = 0;
-    var maxRequestsIn2Minutes = 100;
     var startTime = DateTime.UtcNow;
+    var maxProcessingTime = TimeSpan.FromMinutes(30);
 
     try
     {
@@ -40,6 +39,13 @@ public class ProcessRegionActivity
 
       foreach (var state in regionStates.Where(s => !s.IsCompleted))
       {
+        // Check if we've exceeded our time limit before starting a new state
+        if (DateTime.UtcNow - startTime >= maxProcessingTime)
+        {
+          _logger.LogInformation("30-minute time limit reached, stopping region processing for {Region}", region);
+          break;
+        }
+
         _logger.LogInformation("Processing {Region} - {QueueType} {Tier} {Division} starting from page {Page}",
             state.Region, state.QueueType, state.Tier, state.Division, state.Page);
 
@@ -55,15 +61,12 @@ public class ProcessRegionActivity
         };
 
         var currentPage = state.Page;
-        var stateEntriesProcessed = 0;
+        var stateEntriesProcessed = 0;        // Continue processing pages until we hit time limit or no more data
 
-        // Continue processing pages until we hit rate limit or no more data
-        while (requestsInCurrentWindow < maxRequestsIn2Minutes)
+        while (DateTime.UtcNow - startTime < maxProcessingTime)
         {
           var (entries, rateLimitInfo) = await _riotApiService.GetLeagueEntriesAsync(
               state.Region, state.QueueType, state.Tier, state.Division, currentPage);
-
-          requestsInCurrentWindow++;
 
           if (rateLimitInfo.IsRateLimited)
           {
@@ -106,12 +109,17 @@ public class ProcessRegionActivity
           // Log rate limit status
           _logger.LogDebug("Rate limit status for {Region}: {Current2Min}/{Max2Min} (2min), {Current1Sec}/{Max1Sec} (1sec)",
               state.Region, rateLimitInfo.CurrentRequestsPer2Minutes, rateLimitInfo.RequestsPer2Minutes,
-              rateLimitInfo.CurrentRequestsPerSecond, rateLimitInfo.RequestsPerSecond);
-
-          // Check if we're approaching the 2-minute rate limit
+              rateLimitInfo.CurrentRequestsPerSecond, rateLimitInfo.RequestsPerSecond);          // Check if we're approaching the 2-minute rate limit
           if (rateLimitInfo.CurrentRequestsPer2Minutes >= rateLimitInfo.RequestsPer2Minutes * 0.9)
           {
             _logger.LogInformation("Approaching 2-minute rate limit for {Region}, stopping processing", state.Region);
+            break;
+          }
+
+          // Check if we've exceeded our time limit
+          if (DateTime.UtcNow - startTime >= maxProcessingTime)
+          {
+            _logger.LogInformation("30-minute time limit reached for {Region}, stopping processing", state.Region);
             break;
           }
         }
@@ -130,11 +138,10 @@ public class ProcessRegionActivity
 
       // Add completed states unchanged
       updatedStates.AddRange(regionStates.Where(s => s.IsCompleted));
-
       var processingTime = DateTime.UtcNow - startTime;
       _logger.LogInformation("Completed processing region {Region}. " +
-          "Requests made: {Requests}, Processing time: {ProcessingTime}, States processed: {StatesProcessed}",
-          region, requestsInCurrentWindow, processingTime, updatedStates.Count(s => !s.IsCompleted));
+          "Processing time: {ProcessingTime}, States processed: {StatesProcessed}",
+          region, processingTime, updatedStates.Count(s => !s.IsCompleted));
 
       return updatedStates;
     }
