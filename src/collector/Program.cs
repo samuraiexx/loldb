@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using Azure.Storage.Blobs;
 using collector.Services;
 
 var builder = FunctionsApplication.CreateBuilder(args);
@@ -43,8 +44,18 @@ builder.Services.AddSingleton<CosmosClient>(serviceProvider =>
   return new CosmosClient(cosmosEndpoint, cosmosKey);
 });
 
+// Add Blob Storage client
+builder.Services.AddSingleton<BlobServiceClient>(serviceProvider =>
+{
+  var storageConnectionString = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING") ??
+                               throw new InvalidOperationException("AZURE_STORAGE_CONNECTION_STRING environment variable is required");
+
+  return new BlobServiceClient(storageConnectionString);
+});
+
 // Register services
 builder.Services.AddScoped<IRiotApiService, RiotApiService>();
 builder.Services.AddScoped<ICosmosDbService, CosmosDbService>();
+builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 
 builder.Build().Run();

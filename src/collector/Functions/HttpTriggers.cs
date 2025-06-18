@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.DurableTask.Client;
 using Microsoft.Azure.Functions.Worker.Http;
 
+namespace collector.Functions;
+
 public class HttpTriggers(ILogger<HttpTriggers> logger)
 {
   private readonly ILogger<HttpTriggers> _logger = logger;
@@ -74,5 +76,32 @@ public class HttpTriggers(ILogger<HttpTriggers> logger)
       await errorResponse.WriteStringAsync("Internal server error");
       return errorResponse;
     }
+  }
+
+  [Function("StartMatchCollection")]
+  public async Task<HttpResponseData> StartMatchCollection(
+      [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
+      [DurableClient] DurableTaskClient client)
+  {
+    _logger.LogInformation("Starting Match Collection orchestration");
+
+    var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("MatchCollectionOrchestrator");
+
+    _logger.LogInformation("Started match collection orchestration with ID: {InstanceId}", instanceId);
+
+    var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
+
+    var responseBody = new
+    {
+      message = "Match Collection started successfully",
+      instanceId,
+      statusQueryGetUri = $"{req.Url.Scheme}://{req.Url.Host}/api/status/{instanceId}",
+      sendEventPostUri = $"{req.Url.Scheme}://{req.Url.Host}/runtime/webhooks/durabletask/instances/{instanceId}/raiseEvent/{{eventName}}",
+      terminatePostUri = $"{req.Url.Scheme}://{req.Url.Host}/runtime/webhooks/durabletask/instances/{instanceId}/terminate",
+      rewindPostUri = $"{req.Url.Scheme}://{req.Url.Host}/runtime/webhooks/durabletask/instances/{instanceId}/rewind"
+    };
+
+    await response.WriteAsJsonAsync(responseBody);
+    return response;
   }
 }

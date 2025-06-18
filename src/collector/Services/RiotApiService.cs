@@ -9,6 +9,10 @@ public interface IRiotApiService
 {
   Task<(List<LeagueEntryDTO> entries, RateLimitInfo rateLimitInfo)> GetLeagueEntriesAsync(
       string region, string queueType, string tier, string division, int page = 1);
+  Task<(List<string> matchIds, RateLimitInfo rateLimitInfo)> GetMatchIdsByPuuidAsync(
+      string domain, string puuid, long? startTime = null, long? endTime = null,
+      string matchType = "ranked", int start = 0, int count = 20);
+  Task<(MatchDto? match, RateLimitInfo rateLimitInfo)> GetMatchAsync(string domain, string matchId);
 }
 
 public class RiotApiService : IRiotApiService
@@ -135,5 +139,105 @@ public class RiotApiService : IRiotApiService
     }
 
     return rateLimitInfo;
+  }
+
+  public async Task<(List<string> matchIds, RateLimitInfo rateLimitInfo)> GetMatchIdsByPuuidAsync(
+      string domain, string puuid, long? startTime = null, long? endTime = null,
+      string matchType = "ranked", int start = 0, int count = 20)
+  {
+    var url = $"https://{domain.ToLower()}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids";
+
+    var queryParams = new List<string> { $"api_key={_apiKey}" };
+
+    if (startTime.HasValue)
+      queryParams.Add($"startTime={startTime.Value}");
+    if (endTime.HasValue)
+      queryParams.Add($"endTime={endTime.Value}");
+    if (!string.IsNullOrEmpty(matchType))
+      queryParams.Add($"type={matchType}");
+    if (start > 0)
+      queryParams.Add($"start={start}");
+    if (count != 20)
+      queryParams.Add($"count={count}");
+
+    var requestUri = $"{url}?{string.Join("&", queryParams)}";
+
+    _logger.LogDebug("Getting match IDs for PUUID {Puuid} from {Domain}, start={Start}, count={Count}",
+        puuid, domain, start, count);
+
+    try
+    {
+      var response = await _httpClient.GetAsync(requestUri);
+      var rateLimitInfo = ParseRateLimitHeaders(response.Headers);
+
+      if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+      {
+        _logger.LogWarning("Rate limit exceeded for {Domain}. Retry after: {RetryAfter}s",
+            domain, rateLimitInfo.RetryAfterSeconds);
+        rateLimitInfo.IsRateLimited = true;
+        return (new List<string>(), rateLimitInfo);
+      }
+
+      response.EnsureSuccessStatusCode();
+
+      var content = await response.Content.ReadAsStringAsync();
+      var matchIds = JsonConvert.DeserializeObject<List<string>>(content) ?? new List<string>();
+
+      _logger.LogDebug("Retrieved {Count} match IDs for PUUID {Puuid} from {Domain}",
+          matchIds.Count, puuid, domain);
+
+      return (matchIds, rateLimitInfo);
+    }
+    catch (HttpRequestException ex)
+    {
+      _logger.LogError(ex, "HTTP error getting match IDs for PUUID {Puuid} from {Domain}", puuid, domain);
+      throw;
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Error getting match IDs for PUUID {Puuid} from {Domain}", puuid, domain);
+      throw;
+    }
+  }
+
+  public async Task<(MatchDto? match, RateLimitInfo rateLimitInfo)> GetMatchAsync(string domain, string matchId)
+  {
+    var url = $"https://{domain.ToLower()}.api.riotgames.com/lol/match/v5/matches/{matchId}";
+    var requestUri = $"{url}?api_key={_apiKey}";
+
+    _logger.LogDebug("Getting match details for {MatchId} from {Domain}", matchId, domain);
+
+    try
+    {
+      var response = await _httpClient.GetAsync(requestUri);
+      var rateLimitInfo = ParseRateLimitHeaders(response.Headers);
+
+      if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+      {
+        _logger.LogWarning("Rate limit exceeded for {Domain}. Retry after: {RetryAfter}s",
+            domain, rateLimitInfo.RetryAfterSeconds);
+        rateLimitInfo.IsRateLimited = true;
+        return (null, rateLimitInfo);
+      }
+
+      response.EnsureSuccessStatusCode();
+
+      var content = await response.Content.ReadAsStringAsync();
+      var match = JsonConvert.DeserializeObject<MatchDto>(content);
+
+      _logger.LogDebug("Retrieved match details for {MatchId} from {Domain}", matchId, domain);
+
+      return (match, rateLimitInfo);
+    }
+    catch (HttpRequestException ex)
+    {
+      _logger.LogError(ex, "HTTP error getting match details for {MatchId} from {Domain}", matchId, domain);
+      throw;
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Error getting match details for {MatchId} from {Domain}", matchId, domain);
+      throw;
+    }
   }
 }

@@ -11,6 +11,11 @@ public interface ICosmosDbService
   Task UpsertPlayerStatsAsync(PlayerStatsDocument playerStats, string queueType);
   Task BatchUpsertPlayerStatsAsync(List<PlayerStatsDocument> playerStatsList, string queueType, string region);
   Task<bool> InitializeAsync();
+  Task<List<string>> GetRankedPuuidsAsync(string queueType, string minimumTier = "IRON", string minimumDivision = "V");
+  Task<MatchDocument?> GetMatchAsync(string matchId, string region);
+  Task UpsertMatchAsync(MatchDocument match);
+  Task BatchUpsertMatchesAsync(List<MatchDocument> matches, string region);
+  Task<List<MatchDocument>> GetUnprocessedMatchesAsync(string region, int maxCount = 100);
 }
 
 public class CosmosDbService : ICosmosDbService
@@ -157,6 +162,191 @@ public class CosmosDbService : ICosmosDbService
     if (totalErrors > 0)
     {
       throw new Exception($"Batch upsert completed with {totalErrors} errors for {queueType} in {region}");
+    }
+  }
+
+  public async Task<List<string>> GetRankedPuuidsAsync(string queueType, string minimumTier = "IRON", string minimumDivision = "V")
+  {
+    try
+    {
+      var container = await GetContainerAsync(queueType);
+
+      // Get the tier hierarchy order
+      var tierOrder = new Dictionary<string, int>
+      {
+        { "IRON", 1 }, { "BRONZE", 2 }, { "SILVER", 3 }, { "GOLD", 4 },
+        { "PLATINUM", 5 }, { "EMERALD", 6 }, { "DIAMOND", 7 },
+        { "MASTER", 8 }, { "GRANDMASTER", 9 }, { "CHALLENGER", 10 }
+      };
+
+      var divisionOrder = new Dictionary<string, int>
+      {
+        { "V", 1 }, { "IV", 2 }, { "III", 3 }, { "II", 4 }, { "I", 5 }
+      };
+
+      var minTierValue = tierOrder.GetValueOrDefault(minimumTier.ToUpper(), 1);
+      var minDivisionValue = divisionOrder.GetValueOrDefault(minimumDivision.ToUpper(), 1); var queryDefinition = new QueryDefinition(
+        "SELECT * FROM c WHERE c.snapshot != null");
+
+      var puuids = new List<string>();
+      var iterator = container.GetItemQueryIterator<PlayerStatsDocument>(queryDefinition);
+
+      while (iterator.HasMoreResults)
+      {
+        var response = await iterator.ReadNextAsync();
+        foreach (var doc in response)
+        {
+          if (doc?.Snapshot != null)
+          {
+            var playerTierValue = tierOrder.GetValueOrDefault(doc.Snapshot.Tier.ToUpper(), 0);
+            var playerDivisionValue = divisionOrder.GetValueOrDefault(doc.Snapshot.Rank.ToUpper(), 0);
+
+            // Include if tier is higher than minimum, or same tier but division is higher/equal
+            if (playerTierValue > minTierValue ||
+                (playerTierValue == minTierValue && playerDivisionValue >= minDivisionValue))
+            {
+              puuids.Add(doc.Puuid);
+            }
+          }
+        }
+      }
+
+      _logger.LogInformation("Retrieved {Count} PUUIDs with rank >= {MinTier} {MinDivision} for {QueueType}",
+          puuids.Count, minimumTier, minimumDivision, queueType);
+
+      return puuids;
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Error getting ranked PUUIDs for {QueueType}", queueType);
+      throw;
+    }
+  }
+
+  public async Task<MatchDocument?> GetMatchAsync(string matchId, string region)
+  {
+    try
+    {
+      var container = await GetContainerAsync("matches");
+      var response = await container.ReadItemAsync<MatchDocument>(matchId, new PartitionKey(region));
+      return response.Resource;
+    }
+    catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+    {
+      return null;
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Error getting match {MatchId} for region {Region}", matchId, region);
+      throw;
+    }
+  }
+
+  public async Task UpsertMatchAsync(MatchDocument match)
+  {
+    try
+    {
+      var container = await GetContainerAsync("matches");
+      await container.UpsertItemAsync(match, new PartitionKey(match.Region));
+      _logger.LogDebug("Upserted match {MatchId} for region {Region}", match.MatchId, match.Region);
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Error upserting match {MatchId} for region {Region}", match.MatchId, match.Region);
+      throw;
+    }
+  }
+
+  public async Task BatchUpsertMatchesAsync(List<MatchDocument> matches, string region)
+  {
+    if (!matches.Any())
+    {
+      _logger.LogDebug("No matches to batch upsert");
+      return;
+    }
+
+    var container = await GetContainerAsync("matches");
+    const int batchSize = 50;
+    var batches = matches
+        .Select((item, index) => new { item, index })
+        .GroupBy(x => x.index / batchSize)
+        .Select(g => g.Select(x => x.item).ToList())
+        .ToList();
+
+    _logger.LogInformation("Batch upserting {TotalCount} matches in {BatchCount} batches for region {Region}",
+        matches.Count, batches.Count, region);
+
+    var totalProcessed = 0;
+    var totalErrors = 0;
+
+    foreach (var batch in batches)
+    {
+      var transactionalBatch = container.CreateTransactionalBatch(new PartitionKey(region));
+
+      foreach (var match in batch)
+      {
+        transactionalBatch.UpsertItem(match);
+      }
+
+      var batchResponse = await transactionalBatch.ExecuteAsync();
+
+      if (batchResponse.IsSuccessStatusCode)
+      {
+        totalProcessed += batch.Count;
+        _logger.LogDebug("Successfully batch upserted {Count} matches for region {Region}",
+            batch.Count, region);
+      }
+      else
+      {
+        _logger.LogError("Batch upsert failed with status code: {StatusCode} for region {Region}",
+            batchResponse.StatusCode, region);
+        totalErrors += batch.Count;
+      }
+    }
+
+    _logger.LogInformation("Batch upsert completed for region {Region}. Processed: {Processed}, Errors: {Errors}",
+        region, totalProcessed, totalErrors);
+
+    if (totalErrors > 0)
+    {
+      throw new Exception($"Batch upsert completed with {totalErrors} errors for region {region}");
+    }
+  }
+
+  public async Task<List<MatchDocument>> GetUnprocessedMatchesAsync(string region, int maxCount = 100)
+  {
+    try
+    {
+      var container = await GetContainerAsync("matches");
+
+      var queryDefinition = new QueryDefinition(
+        "SELECT * FROM c WHERE c.region = @region AND c.processed = false")
+        .WithParameter("@region", region);
+
+      var matches = new List<MatchDocument>();
+      var iterator = container.GetItemQueryIterator<MatchDocument>(
+        queryDefinition,
+        requestOptions: new QueryRequestOptions
+        {
+          MaxItemCount = maxCount,
+          PartitionKey = new PartitionKey(region)
+        });
+
+      while (iterator.HasMoreResults && matches.Count < maxCount)
+      {
+        var response = await iterator.ReadNextAsync();
+        matches.AddRange(response);
+      }
+
+      _logger.LogInformation("Retrieved {Count} unprocessed matches for region {Region}",
+          matches.Count, region);
+
+      return matches;
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Error getting unprocessed matches for region {Region}", region);
+      throw;
     }
   }
 }
