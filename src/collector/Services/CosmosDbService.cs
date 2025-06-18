@@ -52,7 +52,6 @@ public class CosmosDbService : ICosmosDbService
       return false;
     }
   }
-
   private async Task<Container> GetContainerAsync(string queueType)
   {
     if (_containers.TryGetValue(queueType, out var existingContainer))
@@ -62,8 +61,15 @@ public class CosmosDbService : ICosmosDbService
 
     if (_database == null)
     {
-      throw new InvalidOperationException("Database not initialized. Call InitializeAsync first.");
+      _logger.LogInformation("Database not initialized, initializing now...");
+      await InitializeAsync();
+
+      if (_database == null)
+      {
+        throw new InvalidOperationException("Failed to initialize database.");
+      }
     }
+
     _logger.LogInformation("Creating container for queue type: {QueueType}", queueType);
 
     var containerResponse = await _database.CreateContainerIfNotExistsAsync(
