@@ -16,8 +16,8 @@ This application implements a durable function orchestrator that:
 ```
 collector/
 ├── Functions/
-│   ├── LeagueDataOrchestrator.cs      # Main orchestrator function
-│   └── ProcessRegionActivity.cs       # Region processing activity
+│   ├── PlayerStatusCollectionOrchestrator.cs      # Main orchestrator function
+│   └── PlayerStatusCollectionActivity.cs       # Region processing activity
 ├── Models/
 │   └── LeagueModels.cs                # Data models and DTOs
 ├── Services/
@@ -26,7 +26,7 @@ collector/
 ├── Tests/
 │   ├── RiotApiServiceTests.cs         # API service tests
 │   ├── CosmosDbServiceTests.cs        # Database service tests
-│   └── ProcessRegionActivityTests.cs  # Activity function tests
+│   └── PlayerStatusCollectionActivityTests.cs  # Activity function tests
 ├── Validation/
 │   └── ValidationScript.cs            # Validation and checks
 ├── MyHttpTrigger.cs                   # HTTP endpoints
@@ -41,9 +41,9 @@ collector/
 ## Architecture
 
 ### Functions
-- **LeagueDataOrchestrator**: Main orchestrator that coordinates the data collection process
-- **ProcessRegionActivity**: Activity function that handles data collection for a specific region
-- **StartLeagueDataCollection**: HTTP trigger to start the orchestration
+- **PlayerStatusCollectionOrchestrator**: Main orchestrator that coordinates the data collection process
+- **PlayerStatusCollectionActivity**: Activity function that handles data collection for a specific region
+- **StartPlayerStatusCollection**: HTTP trigger to start the orchestration
 - **GetOrchestrationStatus**: HTTP trigger to check orchestration status
 
 ### Services
@@ -116,7 +116,7 @@ Rate limits are tracked per region and handled as follows:
 
 ### Start Data Collection
 ```http
-POST /api/StartLeagueDataCollection
+POST /api/StartPlayerStatusCollection
 ```
 
 Response:
@@ -164,7 +164,7 @@ func start
 
 4. Start data collection:
 ```bash
-curl -X POST http://localhost:7071/api/StartLeagueDataCollection
+curl -X POST http://localhost:7071/api/StartPlayerStatusCollection
 ```
 
 ## Testing
@@ -177,7 +177,7 @@ dotnet test
 ### Test Coverage
 - **RiotApiService**: API communication and rate limit parsing
 - **CosmosDbService**: Database operations and error handling
-- **ProcessRegionActivity**: Data processing logic and state management
+- **PlayerStatusCollectionActivity**: Data processing logic and state management
 - **Model validation**: Serialization and data integrity
 
 ### Test Results

@@ -1,9 +1,6 @@
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using collector.Models;
-
-namespace collector.Services;
 
 public interface IBlobStorageService
 {

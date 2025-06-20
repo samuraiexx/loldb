@@ -1,9 +1,6 @@
-using Microsoft.Extensions.Logging;
-using collector.Models;
-using Newtonsoft.Json;
 using System.Text.RegularExpressions;
-
-namespace collector.Services;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 public interface IRiotApiService
 {
@@ -28,28 +25,39 @@ public class RiotApiService : IRiotApiService
     _apiKey = Environment.GetEnvironmentVariable("RIOT_API_KEY") ??
               throw new InvalidOperationException("RIOT_API_KEY environment variable is required");
   }
-
   public async Task<(List<LeagueEntryDTO> entries, RateLimitInfo rateLimitInfo)> GetLeagueEntriesAsync(
       string region, string queueType, string tier, string division, int page = 1)
   {
     var url = $"https://{region.ToLower()}.api.riotgames.com/lol/league-exp/v4/entries/{queueType}/{tier}/{division}";
-
     var requestUri = $"{url}?page={page}&api_key={_apiKey}";
 
     _logger.LogDebug("Making request to: {Region} - {QueueType} {Tier} {Division} Page {Page}",
         region, queueType, tier, division, page);
 
-    try
+    // Retry loop for short rate limits
+    while (true)
     {
       var response = await _httpClient.GetAsync(requestUri);
       var rateLimitInfo = ParseRateLimitHeaders(response.Headers);
 
       if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-      {
-        _logger.LogWarning("Rate limit exceeded for {Region}. Retry after: {RetryAfter}s",
-            region, rateLimitInfo.RetryAfterSeconds);
-        rateLimitInfo.IsRateLimited = true;
-        return (new List<LeagueEntryDTO>(), rateLimitInfo);
+      {        var waitTime = TimeSpan.FromSeconds(rateLimitInfo.RetryAfterSeconds);
+        
+        // Handle short rate limits automatically
+        if (Utils.IsShortRateLimit(waitTime))
+        {
+          _logger.LogInformation("Short rate limit hit for {Region}, waiting {WaitTime} inline",
+              region, waitTime);
+          await Task.Delay(waitTime.Add(TimeSpan.FromSeconds(1))); // Add 1 second buffer
+          continue; // Retry the request
+        }
+        else
+        {
+          _logger.LogWarning("Rate limit exceeded for {Region}. Retry after: {RetryAfter}s",
+              region, rateLimitInfo.RetryAfterSeconds);
+          rateLimitInfo.IsRateLimited = true;
+          return (new List<LeagueEntryDTO>(), rateLimitInfo);
+        }
       }
 
       response.EnsureSuccessStatusCode();
@@ -61,18 +69,6 @@ public class RiotApiService : IRiotApiService
           entries.Count, region, queueType, tier, division, page);
 
       return (entries, rateLimitInfo);
-    }
-    catch (HttpRequestException ex)
-    {
-      _logger.LogError(ex, "HTTP error getting league entries for {Region} - {QueueType} {Tier} {Division} Page {Page}",
-          region, queueType, tier, division, page);
-      throw;
-    }
-    catch (Exception ex)
-    {
-      _logger.LogError(ex, "Error getting league entries for {Region} - {QueueType} {Tier} {Division} Page {Page}",
-          region, queueType, tier, division, page);
-      throw;
     }
   }
 
@@ -140,7 +136,6 @@ public class RiotApiService : IRiotApiService
 
     return rateLimitInfo;
   }
-
   public async Task<(List<string> matchIds, RateLimitInfo rateLimitInfo)> GetMatchIdsByPuuidAsync(
       string domain, string puuid, long? startTime = null, long? endTime = null,
       string matchType = "ranked", int start = 0, int count = 20)
@@ -165,17 +160,31 @@ public class RiotApiService : IRiotApiService
     _logger.LogDebug("Getting match IDs for PUUID {Puuid} from {Domain}, start={Start}, count={Count}",
         puuid, domain, start, count);
 
-    try
+    // Retry loop for short rate limits
+    while (true)
     {
       var response = await _httpClient.GetAsync(requestUri);
       var rateLimitInfo = ParseRateLimitHeaders(response.Headers);
 
       if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
       {
-        _logger.LogWarning("Rate limit exceeded for {Domain}. Retry after: {RetryAfter}s",
-            domain, rateLimitInfo.RetryAfterSeconds);
-        rateLimitInfo.IsRateLimited = true;
-        return (new List<string>(), rateLimitInfo);
+        var waitTime = TimeSpan.FromSeconds(rateLimitInfo.RetryAfterSeconds);
+        
+        // Handle short rate limits automatically
+        if (Utils.IsShortRateLimit(waitTime))
+        {
+          _logger.LogInformation("Short rate limit hit for {Domain}, waiting {WaitTime} inline",
+              domain, waitTime);
+          await Task.Delay(waitTime.Add(TimeSpan.FromSeconds(1))); // Add 1 second buffer
+          continue; // Retry the request
+        }
+        else
+        {
+          _logger.LogWarning("Rate limit exceeded for {Domain}. Retry after: {RetryAfter}s",
+              domain, rateLimitInfo.RetryAfterSeconds);
+          rateLimitInfo.IsRateLimited = true;
+          return (new List<string>(), rateLimitInfo);
+        }
       }
 
       response.EnsureSuccessStatusCode();
@@ -188,18 +197,7 @@ public class RiotApiService : IRiotApiService
 
       return (matchIds, rateLimitInfo);
     }
-    catch (HttpRequestException ex)
-    {
-      _logger.LogError(ex, "HTTP error getting match IDs for PUUID {Puuid} from {Domain}", puuid, domain);
-      throw;
-    }
-    catch (Exception ex)
-    {
-      _logger.LogError(ex, "Error getting match IDs for PUUID {Puuid} from {Domain}", puuid, domain);
-      throw;
-    }
   }
-
   public async Task<(MatchDto? match, RateLimitInfo rateLimitInfo)> GetMatchAsync(string domain, string matchId)
   {
     var url = $"https://{domain.ToLower()}.api.riotgames.com/lol/match/v5/matches/{matchId}";
@@ -207,17 +205,31 @@ public class RiotApiService : IRiotApiService
 
     _logger.LogDebug("Getting match details for {MatchId} from {Domain}", matchId, domain);
 
-    try
+    // Retry loop for short rate limits
+    while (true)
     {
       var response = await _httpClient.GetAsync(requestUri);
       var rateLimitInfo = ParseRateLimitHeaders(response.Headers);
 
       if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
       {
-        _logger.LogWarning("Rate limit exceeded for {Domain}. Retry after: {RetryAfter}s",
-            domain, rateLimitInfo.RetryAfterSeconds);
-        rateLimitInfo.IsRateLimited = true;
-        return (null, rateLimitInfo);
+        var waitTime = TimeSpan.FromSeconds(rateLimitInfo.RetryAfterSeconds);
+        
+        // Handle short rate limits automatically
+        if (Utils.IsShortRateLimit(waitTime))
+        {
+          _logger.LogInformation("Short rate limit hit for {Domain}, waiting {WaitTime} inline",
+              domain, waitTime);
+          await Task.Delay(waitTime.Add(TimeSpan.FromSeconds(1))); // Add 1 second buffer
+          continue; // Retry the request
+        }
+        else
+        {
+          _logger.LogWarning("Rate limit exceeded for {Domain}. Retry after: {RetryAfter}s",
+              domain, rateLimitInfo.RetryAfterSeconds);
+          rateLimitInfo.IsRateLimited = true;
+          return (null, rateLimitInfo);
+        }
       }
 
       response.EnsureSuccessStatusCode();
@@ -228,16 +240,6 @@ public class RiotApiService : IRiotApiService
       _logger.LogDebug("Retrieved match details for {MatchId} from {Domain}", matchId, domain);
 
       return (match, rateLimitInfo);
-    }
-    catch (HttpRequestException ex)
-    {
-      _logger.LogError(ex, "HTTP error getting match details for {MatchId} from {Domain}", matchId, domain);
-      throw;
-    }
-    catch (Exception ex)
-    {
-      _logger.LogError(ex, "Error getting match details for {MatchId} from {Domain}", matchId, domain);
-      throw;
     }
   }
 }

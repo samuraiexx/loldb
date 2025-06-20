@@ -1,6 +1,5 @@
+using System.Security;
 using Newtonsoft.Json;
-
-namespace collector.Models;
 
 public class LeagueEntryDTO
 {
@@ -125,16 +124,39 @@ public class PlayerStatsDocument
   public string Region { get; set; } = string.Empty;
 }
 
-public class ProcessingState
+public class UnitToProcess
 {
-  public string Region { get; set; } = string.Empty;
-  public string QueueType { get; set; } = string.Empty;
-  public string Tier { get; set; } = string.Empty;
-  public string Division { get; set; } = string.Empty;
-  public int Page { get; set; } = 1;
-  public bool IsCompleted { get; set; } = false;
-  public DateTime LastProcessed { get; set; }
+  public required string Region { get; set; }
+  public required string MatchRegion { get; set; } // Match API regional domain
+  public required string QueueType { get; set; }
+  public required string Tier { get; set; }
+  public required string Division { get; set; }
+}
+
+public class MatchDataProcessingState
+{
+  public required string MatchRegion { get; set; }
+  public required DateTime MaxCreatedOn { get; set; }
+  public required int TotalToProcess { get; set; }
   public int TotalProcessed { get; set; } = 0;
+  public DateTime EndOfRateLimit { get; set; } = DateTime.MinValue;
+}
+
+public class PlayerMatchProcessingState
+{
+  public required List<UnitToProcess> ProcessingScope { get; set; }
+  public required DateTime ScopeBegin { get; set; }
+  public required DateTime ScopeEnd { get; set; }
+  public int TotalProcessed { get; set; } = 0;
+  public DateTime EndOfRateLimit { get; set; } = DateTime.MinValue;
+}
+
+public class PlayerStatusProcessingState
+{
+  public required List<UnitToProcess> ProcessingScope { get; set; }
+  public int TotalProcessed { get; set; } = 0;
+  public int LastProcessedPage { get; set; } = 0;
+  public DateTime EndOfRateLimit { get; set; } = DateTime.MinValue;
 }
 
 public class RateLimitInfo
@@ -150,37 +172,20 @@ public class RateLimitInfo
 public static class Constants
 {
   public static readonly string[] Regions = { "BR1", "EUN1", "EUW1", "JP1", "KR", "LA1", "LA2", "ME1", "NA1", "OC1", "RU", "SG2", "TR1", "TW2", "VN2" };
-
   public static readonly string[] QueueTypes = { "RANKED_SOLO_5x5", "RANKED_FLEX_SR" };
-
   public static readonly string[] Tiers = { "CHALLENGER", "GRANDMASTER", "MASTER", "DIAMOND", "EMERALD", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON" };
-
   public static readonly string[] Divisions = { "I", "II", "III", "IV" };
-
   public static readonly string[] HighTiers = { "CHALLENGER", "GRANDMASTER", "MASTER" };
+  public static readonly string[] MatchRegions = { "americas", "asia", "europe", "sea" };
 
   // Match v5 regional domains
-  public static readonly Dictionary<string, string> RegionToDomain = new()
+  public static readonly Dictionary<string, string> RegionToMatchRegion = new()
   {
     { "NA1", "americas" }, { "BR1", "americas" }, { "LA1", "americas" }, { "LA2", "americas" },
     { "KR", "asia" }, { "JP1", "asia" },
     { "EUW1", "europe" }, { "EUN1", "europe" }, { "ME1", "europe" }, { "TR1", "europe" }, { "RU", "europe" },
     { "OC1", "sea" }, { "SG2", "sea" }, { "TW2", "sea" }, { "VN2", "sea" }
   };
-
-  public static readonly string[] Domains = { "americas", "asia", "europe", "sea" };
-}
-
-// Match collection models
-public class MatchCollectionState
-{
-  public string Domain { get; set; } = string.Empty;
-  public DateTime StartTime { get; set; }
-  public DateTime EndTime { get; set; }
-  public List<string> Puuids { get; set; } = new();
-  public bool IsCompleted { get; set; } = false;
-  public DateTime LastProcessed { get; set; }
-  public int TotalMatchesCollected { get; set; } = 0;
 }
 
 public class MatchDocument

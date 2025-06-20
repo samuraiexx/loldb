@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Azure.Storage.Blobs;
-using collector.Services;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 

@@ -1,9 +1,5 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
-using collector.Models;
-using Newtonsoft.Json;
-
-namespace collector.Services;
 
 public interface ICosmosDbService
 {
@@ -15,7 +11,7 @@ public interface ICosmosDbService
   Task<MatchDocument?> GetMatchAsync(string matchId, string region);
   Task UpsertMatchAsync(MatchDocument match);
   Task BatchUpsertMatchesAsync(List<MatchDocument> matches, string region);
-  Task<List<MatchDocument>> GetUnprocessedMatchesAsync(string region, int maxCount = 100);
+  Task<List<MatchDocument>> GetUnprocessedMatchesAsync(string region, int maxCount = 120, DateTime? maxCreatedTime = null);
 }
 
 public class CosmosDbService : ICosmosDbService
@@ -318,41 +314,40 @@ public class CosmosDbService : ICosmosDbService
       throw new Exception($"Batch upsert completed with {totalErrors} errors for region {region}");
     }
   }
-
-  public async Task<List<MatchDocument>> GetUnprocessedMatchesAsync(string region, int maxCount = 100)
+  public async Task<List<MatchDocument>> GetUnprocessedMatchesAsync(string region, int maxCount = 120, DateTime? maxCreatedTime = null)
   {
-    try
+    var container = await GetContainerAsync("matches");
+
+    var queryText = "SELECT * FROM c WHERE c.region = @region AND c.processed = false";
+    var queryDefinition = new QueryDefinition(queryText)
+      .WithParameter("@region", region);
+
+    if (maxCreatedTime.HasValue)
     {
-      var container = await GetContainerAsync("matches");
+      queryText += " AND c.created_at <= @maxCreatedTime";
+      queryDefinition = new QueryDefinition(queryText)
+        .WithParameter("@region", region)
+        .WithParameter("@maxCreatedTime", maxCreatedTime.Value);
+    }
 
-      var queryDefinition = new QueryDefinition(
-        "SELECT * FROM c WHERE c.region = @region AND c.processed = false")
-        .WithParameter("@region", region);
-
-      var matches = new List<MatchDocument>();
-      var iterator = container.GetItemQueryIterator<MatchDocument>(
-        queryDefinition,
-        requestOptions: new QueryRequestOptions
-        {
-          MaxItemCount = maxCount,
-          PartitionKey = new PartitionKey(region)
-        });
-
-      while (iterator.HasMoreResults && matches.Count < maxCount)
+    var matches = new List<MatchDocument>();
+    var iterator = container.GetItemQueryIterator<MatchDocument>(
+      queryDefinition,
+      requestOptions: new QueryRequestOptions
       {
-        var response = await iterator.ReadNextAsync();
-        matches.AddRange(response);
-      }
+        MaxItemCount = maxCount,
+        PartitionKey = new PartitionKey(region)
+      });
 
-      _logger.LogInformation("Retrieved {Count} unprocessed matches for region {Region}",
-          matches.Count, region);
-
-      return matches;
-    }
-    catch (Exception ex)
+    while (iterator.HasMoreResults && matches.Count < maxCount)
     {
-      _logger.LogError(ex, "Error getting unprocessed matches for region {Region}", region);
-      throw;
+      var response = await iterator.ReadNextAsync();
+      matches.AddRange(response);
     }
+
+    _logger.LogInformation("Retrieved {Count} unprocessed matches for region {Region} (maxCreatedTime: {MaxCreatedTime})",
+        matches.Count, region, maxCreatedTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "none");
+
+    return matches;
   }
 }
