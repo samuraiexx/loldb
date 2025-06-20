@@ -6,8 +6,7 @@ using Microsoft.Extensions.Logging;
 public class HttpTriggers(ILogger<HttpTriggers> logger)
 {
   private readonly ILogger<HttpTriggers> _logger = logger;
-
-  [Function("")]
+  [Function("StartPlayerStatusCollection")]
   public async Task<HttpResponseData> StartPlayerStatusCollection(
       [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
       [DurableClient] DurableTaskClient client)
@@ -37,7 +36,7 @@ public class HttpTriggers(ILogger<HttpTriggers> logger)
   {
     _logger.LogInformation("Starting Match Collection orchestration");
 
-    var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("PlayerMatchesCollectionOrchestrator");
+    var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("PlayerMatchCollectionOrchestrator");
 
     _logger.LogInformation("Started match collection orchestration with ID: {InstanceId}", instanceId);
 
@@ -46,6 +45,29 @@ public class HttpTriggers(ILogger<HttpTriggers> logger)
     var responseBody = new
     {
       message = "Match Collection started successfully",
+      instanceId,
+    };
+
+    await response.WriteAsJsonAsync(responseBody);
+    return response;
+  }
+
+  [Function("StartMatchDataCollection")]
+  public async Task<HttpResponseData> StartMatchDataCollection(
+      [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
+      [DurableClient] DurableTaskClient client)
+  {
+    _logger.LogInformation("Starting Match Data Collection orchestration");
+
+    var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("MatchDataCollectionOrchestrator");
+
+    _logger.LogInformation("Started match data collection orchestration with ID: {InstanceId}", instanceId);
+
+    var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
+
+    var responseBody = new
+    {
+      message = "Match Data Collection started successfully",
       instanceId,
     };
 
