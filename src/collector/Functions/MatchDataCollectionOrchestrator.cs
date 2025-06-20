@@ -22,8 +22,12 @@ public class MatchDataCollectionOrchestrator
     {
       var endOfRateLimit = matchDataProcessingState.Max(scope => scope.EndOfRateLimit);
 
-      logger.LogInformation($"Waiting {Math.Max(0, (endOfRateLimit - context.CurrentUtcDateTime).TotalSeconds)} seconds before next cycle due to rate limits");
-      await context.CreateTimer(endOfRateLimit, CancellationToken.None);
+      // Only wait if we have a valid future rate limit time
+      if (endOfRateLimit > context.CurrentUtcDateTime)
+      {
+        logger.LogInformation($"Waiting {(endOfRateLimit - context.CurrentUtcDateTime).TotalSeconds:F1} seconds before next cycle due to rate limits");
+        await context.CreateTimer(endOfRateLimit, CancellationToken.None);
+      }
 
       logger.LogInformation("Starting new processing cycle");
       logger.LogInformation("Processing {RegionCount} regions in parallel", matchDataProcessingState.Count);
