@@ -40,7 +40,19 @@ builder.Services.AddSingleton<CosmosClient>(serviceProvider =>
   var cosmosKey = Environment.GetEnvironmentVariable("AZURE_COSMOS_KEY") ??
                  throw new InvalidOperationException("AZURE_COSMOS_KEY environment variable is required");
 
-  return new CosmosClient(cosmosEndpoint, cosmosKey);
+  var cosmosClientOptions = new CosmosClientOptions
+  {
+    MaxRetryAttemptsOnRateLimitedRequests = 10,
+    MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(60),
+    RequestTimeout = TimeSpan.FromSeconds(60),
+    OpenTcpConnectionTimeout = TimeSpan.FromSeconds(5),
+    IdleTcpConnectionTimeout = TimeSpan.FromMinutes(1),
+    MaxRequestsPerTcpConnection = 30,
+    MaxTcpConnectionsPerEndpoint = 16,
+    ConsistencyLevel = ConsistencyLevel.Session
+  };
+
+  return new CosmosClient(cosmosEndpoint, cosmosKey, cosmosClientOptions);
 });
 
 // Add Blob Storage client
