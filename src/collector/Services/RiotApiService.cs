@@ -41,8 +41,9 @@ public class RiotApiService : IRiotApiService
       var rateLimitInfo = ParseRateLimitHeaders(response.Headers);
 
       if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-      {        var waitTime = TimeSpan.FromSeconds(rateLimitInfo.RetryAfterSeconds);
-        
+      {
+        var waitTime = TimeSpan.FromSeconds(rateLimitInfo.RetryAfterSeconds);
+
         // Handle short rate limits automatically
         if (Utils.IsShortRateLimit(waitTime))
         {
@@ -53,8 +54,7 @@ public class RiotApiService : IRiotApiService
         }
         else
         {
-          _logger.LogWarning("Rate limit exceeded for {Region}. Retry after: {RetryAfter}s",
-              region, rateLimitInfo.RetryAfterSeconds);
+          _logger.LogWarning("Rate limit exceeded for {Region}. Retry after: {RetryAfter}s", region, rateLimitInfo.RetryAfterSeconds);
           rateLimitInfo.IsRateLimited = true;
           return (new List<LeagueEntryDTO>(), rateLimitInfo);
         }
@@ -169,7 +169,7 @@ public class RiotApiService : IRiotApiService
       if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
       {
         var waitTime = TimeSpan.FromSeconds(rateLimitInfo.RetryAfterSeconds);
-        
+
         // Handle short rate limits automatically
         if (Utils.IsShortRateLimit(waitTime))
         {
@@ -214,7 +214,7 @@ public class RiotApiService : IRiotApiService
       if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
       {
         var waitTime = TimeSpan.FromSeconds(rateLimitInfo.RetryAfterSeconds);
-        
+
         // Handle short rate limits automatically
         if (Utils.IsShortRateLimit(waitTime))
         {

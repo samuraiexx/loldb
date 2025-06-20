@@ -26,6 +26,7 @@ public class PlayerMatchCollectionActivities
   {
     return await _blobStorageService.GetMatchCollectionConfigAsync();
   }
+
   [Function("CollectMatchesForDomainActivity")]
   public async Task<PlayerMatchProcessingState> CollectMatchesForDomainActivity([ActivityTrigger] PlayerMatchProcessingState processingState)
   {

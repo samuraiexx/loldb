@@ -20,6 +20,7 @@ public class MatchDataCollectionActivities
     _blobStorageService = blobStorageService;
     _logger = logger;
   }
+
   [Function("GetMatchCollectionTotalCountActivity")]
   public async Task<Dictionary<string, int>> GetMatchCollectionTotalCountActivity([ActivityTrigger] string input)
   {
@@ -50,6 +51,7 @@ public class MatchDataCollectionActivities
 
     return totalCountPerRegion;
   }
+
   [Function("CollectMatchDataActivity")]
   public async Task<MatchDataProcessingState> CollectMatchDataActivity([ActivityTrigger] MatchDataProcessingState processingState)
   {
@@ -65,7 +67,6 @@ public class MatchDataCollectionActivities
         .ToList();
 
     var processedMatches = new List<MatchDocument>();
-    var rateLimitEndTime = DateTime.MinValue;
 
     // Phase 1: Collect all match data from Riot API
     foreach (var region in regions)
@@ -78,51 +79,32 @@ public class MatchDataCollectionActivities
 
       // Get unprocessed matches for this region
       var matches = await _cosmosDbService.GetUnprocessedMatchesAsync(region, Utils.ActivityConstants.MaxMatchesToFetch, processingState.MaxCreatedOn);
+      var isRateLimited = false;
       _logger.LogInformation("Retrieved {Count} unprocessed matches for region {Region}", matches.Count, region);
 
       foreach (var match in matches)
       {
-        if (!Utils.ShouldContinueActivity(activityStartTime))
-        {
-          _logger.LogInformation("Activity time limit reached for match region {MatchRegion}", processingState.MatchRegion);
-          break;
-        }
-
         var (matchData, rateLimitInfo) = await _riotApiService.GetMatchAsync(processingState.MatchRegion, match.MatchId);
 
         if (rateLimitInfo.IsRateLimited)
         {
-          var waitTime = TimeSpan.FromSeconds(rateLimitInfo.RetryAfterSeconds);
-          if (Utils.ShouldStopForRateLimit(waitTime))
-          {
-            _logger.LogWarning("Rate limit wait time {WaitTime} exceeds maximum for match region {MatchRegion}, stopping API calls",
-                waitTime, processingState.MatchRegion);
-            rateLimitEndTime = DateTime.UtcNow.Add(waitTime);
-            break;
-          }
-
-          _logger.LogInformation("Rate limited for match region {MatchRegion}, waiting {WaitTime}",
-              processingState.MatchRegion, waitTime);
-          await Task.Delay(waitTime);
-          continue;
+          _logger.LogWarning("Rate limit wait time {WaitTime}s exceeds maximum for match region {MatchRegion}, stopping API calls", rateLimitInfo.RetryAfterSeconds, processingState.MatchRegion);
+          processingState.EndOfRateLimit = DateTime.UtcNow.AddSeconds(rateLimitInfo.RetryAfterSeconds);
+          isRateLimited = true;
+          break;
         }
 
-        if (matchData != null)
-        {
-          match.MatchData = matchData;
-          match.Processed = true;
-          processedMatches.Add(match);
+        match.MatchData = matchData!;
+        match.Processed = true;
+        processedMatches.Add(match);
 
-          _logger.LogDebug("Collected match data for {MatchId} from region {Region}", match.MatchId, region);
-        }
-        else
-        {
-          _logger.LogWarning("Failed to retrieve match data for {MatchId}", match.MatchId);
-        }
+        _logger.LogDebug("Collected match data for {MatchId} from region {Region}", match.MatchId, region);
       }
 
-      if (rateLimitEndTime > DateTime.MinValue)
+      if (isRateLimited)
+      {
         break;
+      }
     }
 
     // Phase 2: Batch save all processed matches to database
@@ -134,26 +116,12 @@ public class MatchDataCollectionActivities
       foreach (var regionGroup in matchesByRegion)
       {
         var region = regionGroup.Key;
-        var matches = regionGroup.ToList();
+        var matches = regionGroup.ToList(); _logger.LogInformation("Batch upserting {Count} matches for region {Region}", matches.Count, region);
 
-        _logger.LogInformation("Batch upserting {Count} matches for region {Region}", matches.Count, region);
-
-        // Save in smaller batches to avoid timeout
-        for (int i = 0; i < matches.Count; i += Utils.ActivityConstants.MatchBatchSize)
-        {
-          var batch = matches.Skip(i).Take(Utils.ActivityConstants.MatchBatchSize).ToList();
-          foreach (var match in batch)
-          {
-            await _cosmosDbService.UpsertMatchAsync(match);
-          }
-
-          _logger.LogDebug("Saved batch of {BatchCount} matches for region {Region}", batch.Count, region);
-        }
+        await _cosmosDbService.BatchUpsertMatchesAsync(matches, region);
       }
     }
-
     processingState.TotalProcessed += processedMatches.Count;
-    processingState.EndOfRateLimit = rateLimitEndTime;
 
     _logger.LogInformation("Completed match data processing for region {MatchRegion}. Processed: {Count}",
         processingState.MatchRegion, processedMatches.Count);

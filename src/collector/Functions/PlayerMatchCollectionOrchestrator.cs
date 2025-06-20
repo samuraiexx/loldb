@@ -62,6 +62,15 @@ public class PlayerMatchCollectionOrchestrator
       }
       logger.LogInformation("=== End Region Progress ===");
     }
+
+    // Save the updated configuration with startTime = endTime after processing is completed
+    logger.LogInformation("Updating configuration: setting startTime to {EndTime}", endTime);
+    var updatedConfig = new MatchCollectionConfig
+    {
+      StartTime = endTime
+    };
+    await context.CallActivityAsync("SaveMatchCollectionConfigActivity", updatedConfig);
+
     logger.LogInformation("Orchestration completed.");
   }
 }
