@@ -7,7 +7,7 @@ public interface ICosmosDbService
   Task UpsertPlayerStatsAsync(PlayerStatsDocument playerStats, string queueType);
   Task BatchUpsertPlayerStatsAsync(List<PlayerStatsDocument> playerStatsList, string queueType, string region);
   Task<bool> InitializeAsync();
-  Task<List<string>> GetRankedPuuidsAsync(string queueType, string minimumTier = "IRON", string minimumDivision = "V");
+  Task<List<string>> GetRankedPuuidsAsync(string queueType, string tier, string division);
   Task<MatchDocument?> GetMatchAsync(string matchId, string region);
   Task UpsertMatchAsync(MatchDocument match);
   Task BatchUpsertMatchesAsync(List<MatchDocument> matches, string region);
@@ -167,54 +167,34 @@ public class CosmosDbService : ICosmosDbService
     }
   }
 
-  public async Task<List<string>> GetRankedPuuidsAsync(string queueType, string minimumTier = "IRON", string minimumDivision = "V")
+  public async Task<List<string>> GetRankedPuuidsAsync(string queueType, string tier, string division)
   {
     try
     {
       var container = await GetContainerAsync(queueType);
 
-      // Get the tier hierarchy order
-      var tierOrder = new Dictionary<string, int>
-      {
-        { "IRON", 1 }, { "BRONZE", 2 }, { "SILVER", 3 }, { "GOLD", 4 },
-        { "PLATINUM", 5 }, { "EMERALD", 6 }, { "DIAMOND", 7 },
-        { "MASTER", 8 }, { "GRANDMASTER", 9 }, { "CHALLENGER", 10 }
-      };
-
-      var divisionOrder = new Dictionary<string, int>
-      {
-        { "V", 1 }, { "IV", 2 }, { "III", 3 }, { "II", 4 }, { "I", 5 }
-      };
-
-      var minTierValue = tierOrder.GetValueOrDefault(minimumTier.ToUpper(), 1);
-      var minDivisionValue = divisionOrder.GetValueOrDefault(minimumDivision.ToUpper(), 1); var queryDefinition = new QueryDefinition(
-        "SELECT * FROM c WHERE c.snapshot != null");
+      var queryDefinition = new QueryDefinition(
+        "SELECT c.puuid FROM c WHERE c.snapshot != null AND UPPER(c.snapshot.tier) = @tier AND UPPER(c.snapshot.rank) = @division")
+        .WithParameter("@tier", tier.ToUpper())
+        .WithParameter("@division", division.ToUpper());
 
       var puuids = new List<string>();
-      var iterator = container.GetItemQueryIterator<PlayerStatsDocument>(queryDefinition);
+      var iterator = container.GetItemQueryIterator<dynamic>(queryDefinition);
 
       while (iterator.HasMoreResults)
       {
         var response = await iterator.ReadNextAsync();
-        foreach (var doc in response)
+        foreach (var item in response)
         {
-          if (doc?.Snapshot != null)
+          if (item?.puuid != null)
           {
-            var playerTierValue = tierOrder.GetValueOrDefault(doc.Snapshot.Tier.ToUpper(), 0);
-            var playerDivisionValue = divisionOrder.GetValueOrDefault(doc.Snapshot.Rank.ToUpper(), 0);
-
-            // Include if tier is higher than minimum, or same tier but division is higher/equal
-            if (playerTierValue > minTierValue ||
-                (playerTierValue == minTierValue && playerDivisionValue >= minDivisionValue))
-            {
-              puuids.Add(doc.Puuid);
-            }
+            puuids.Add((string)item.puuid);
           }
         }
       }
 
-      _logger.LogInformation("Retrieved {Count} PUUIDs with rank >= {MinTier} {MinDivision} for {QueueType}",
-          puuids.Count, minimumTier, minimumDivision, queueType);
+      _logger.LogInformation("Retrieved {Count} PUUIDs for exact rank {Tier} {Division} for {QueueType}",
+          puuids.Count, tier, division, queueType);
 
       return puuids;
     }

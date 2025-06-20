@@ -24,7 +24,7 @@ public class PlayerMatchCollectionOrchestrator
       .Select(scope => new PlayerMatchProcessingState { ProcessingScope = scope.Select(unit => unit).ToList(), ScopeBegin = startTime, ScopeEnd = endTime })
       .ToList();
 
-     while (!PlayerMatchProcessingState.All(state => state.TotalProcessed == state.ProcessingScope.Count()))
+    while (!PlayerMatchProcessingState.All(state => state.TotalProcessed == state.ProcessingScope.Count()))
     {
       var endOfRateLimit = PlayerMatchProcessingState.Max(scope => scope.EndOfRateLimit);
 
