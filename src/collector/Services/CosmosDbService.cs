@@ -7,7 +7,7 @@ public interface ICosmosDbService
   Task UpsertPlayerStatsAsync(PlayerStatsDocument playerStats, string queueType);
   Task BatchUpsertPlayerStatsAsync(List<PlayerStatsDocument> playerStatsList, string queueType, string region);
   Task<bool> InitializeAsync();
-  Task<List<string>> GetRankedPuuidsAsync(string queueType, string tier, string division);
+  Task<List<string>> GetRankedPuuidsAsync(string queueType, string tier, string division, string region);
   Task<MatchDocument?> GetMatchAsync(string matchId, string region);
   Task UpsertMatchAsync(MatchDocument match);
   Task BatchUpsertMatchesAsync(List<MatchDocument> matches, string region);
@@ -177,20 +177,23 @@ public class CosmosDbService : ICosmosDbService
       throw new Exception($"Batch upsert completed with {totalErrors} errors for {queueType} in {region}");
     }
   }
-
-  public async Task<List<string>> GetRankedPuuidsAsync(string queueType, string tier, string division)
+  public async Task<List<string>> GetRankedPuuidsAsync(string queueType, string tier, string division, string region)
   {
     try
     {
       var container = await GetContainerAsync(queueType);
 
       var queryDefinition = new QueryDefinition(
-        "SELECT c.puuid FROM c WHERE c.snapshot != null AND UPPER(c.snapshot.tier) = @tier AND UPPER(c.snapshot.rank) = @division")
+        "SELECT c.puuid FROM c WHERE c.snapshot != null AND UPPER(c.snapshot.tier) = @tier AND UPPER(c.snapshot.rank) = @division AND c.region = @region")
         .WithParameter("@tier", tier.ToUpper())
-        .WithParameter("@division", division.ToUpper());
+        .WithParameter("@division", division.ToUpper())
+        .WithParameter("@region", region);
 
       var puuids = new List<string>();
-      var iterator = container.GetItemQueryIterator<dynamic>(queryDefinition);
+      var iterator = container.GetItemQueryIterator<dynamic>(queryDefinition, requestOptions: new QueryRequestOptions
+      {
+        PartitionKey = new PartitionKey(region)
+      });
 
       while (iterator.HasMoreResults)
       {
@@ -204,14 +207,14 @@ public class CosmosDbService : ICosmosDbService
         }
       }
 
-      _logger.LogInformation("Retrieved {Count} PUUIDs for exact rank {Tier} {Division} for {QueueType}",
-          puuids.Count, tier, division, queueType);
+      _logger.LogInformation("Retrieved {Count} PUUIDs for exact rank {Tier} {Division} for {QueueType} in {Region}",
+          puuids.Count, tier, division, queueType, region);
 
       return puuids;
     }
     catch (Exception ex)
     {
-      _logger.LogError(ex, "Error getting ranked PUUIDs for {QueueType}", queueType);
+      _logger.LogError(ex, "Error getting ranked PUUIDs for {QueueType} in {Region}", queueType, region);
       throw;
     }
   }

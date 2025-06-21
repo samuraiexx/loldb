@@ -32,7 +32,8 @@ public class PlayerMatchCollectionActivities
   {
     var matchRegion = processingState.ProcessingScope.First().MatchRegion;
     _logger.LogInformation("Processing match collection for match region {MatchRegion} with {UnitCount} units",
-        matchRegion, processingState.ProcessingScope.Count);    var activityStartTime = DateTime.UtcNow;
+        matchRegion, processingState.ProcessingScope.Count);
+    var activityStartTime = DateTime.UtcNow;
     var startTimeEpoch = ((DateTimeOffset)processingState.ScopeBegin).ToUnixTimeSeconds();
     var endTimeEpoch = ((DateTimeOffset)processingState.ScopeEnd).ToUnixTimeSeconds();
 
@@ -55,12 +56,11 @@ public class PlayerMatchCollectionActivities
         _logger.LogInformation("Activity time limit reached for match region {MatchRegion}", matchRegion);
         break;
       }
-
       _logger.LogInformation("Processing unit: {Region} {QueueType} {Tier} {Division}",
           unit.Region, unit.QueueType, unit.Tier, unit.Division);
 
       // Get ranked PUUIDs for this unit
-      var puuids = await _cosmosDbService.GetRankedPuuidsAsync(unit.QueueType, unit.Tier, unit.Division);
+      var puuids = await _cosmosDbService.GetRankedPuuidsAsync(unit.QueueType, unit.Tier, unit.Division, unit.Region);
       _logger.LogInformation("Found {Count} PUUIDs for {Region} {QueueType} {Tier} {Division}",
           puuids.Count, unit.Region, unit.QueueType, unit.Tier, unit.Division);
 
