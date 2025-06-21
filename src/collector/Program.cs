@@ -38,19 +38,14 @@ builder.Services.AddSingleton<CosmosClient>(serviceProvider =>
   var cosmosEndpoint = Environment.GetEnvironmentVariable("AZURE_COSMOS_ENDPOINT") ??
                       throw new InvalidOperationException("AZURE_COSMOS_ENDPOINT environment variable is required");
   var cosmosKey = Environment.GetEnvironmentVariable("AZURE_COSMOS_KEY") ??
-                 throw new InvalidOperationException("AZURE_COSMOS_KEY environment variable is required");
-
-  var cosmosClientOptions = new CosmosClientOptions
-  {
-    MaxRetryAttemptsOnRateLimitedRequests = 10,
-    MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(60),
-    RequestTimeout = TimeSpan.FromSeconds(60),
-    OpenTcpConnectionTimeout = TimeSpan.FromSeconds(5),
-    IdleTcpConnectionTimeout = TimeSpan.FromMinutes(1),
-    MaxRequestsPerTcpConnection = 30,
-    MaxTcpConnectionsPerEndpoint = 16,
-    ConsistencyLevel = ConsistencyLevel.Session
-  };
+                 throw new InvalidOperationException("AZURE_COSMOS_KEY environment variable is required"); var cosmosClientOptions = new CosmosClientOptions
+                 {
+                   MaxRetryAttemptsOnRateLimitedRequests = 10,
+                   MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(60),
+                   RequestTimeout = TimeSpan.FromSeconds(60),
+                   ConsistencyLevel = ConsistencyLevel.Session,
+                   ConnectionMode = ConnectionMode.Direct
+                 };
 
   return new CosmosClient(cosmosEndpoint, cosmosKey, cosmosClientOptions);
 });
