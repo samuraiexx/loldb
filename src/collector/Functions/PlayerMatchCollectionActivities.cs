@@ -32,13 +32,16 @@ public class PlayerMatchCollectionActivities
   {
     var matchRegion = processingState.ProcessingScope.First().MatchRegion;
     _logger.LogInformation("Processing match collection for match region {MatchRegion} with {UnitCount} units",
-        matchRegion, processingState.ProcessingScope.Count);
-
-    var activityStartTime = DateTime.UtcNow;
+        matchRegion, processingState.ProcessingScope.Count);    var activityStartTime = DateTime.UtcNow;
     var startTimeEpoch = ((DateTimeOffset)processingState.ScopeBegin).ToUnixTimeSeconds();
     var endTimeEpoch = ((DateTimeOffset)processingState.ScopeEnd).ToUnixTimeSeconds();
 
-    await _cosmosDbService.InitializeAsync();
+    var initResult = await _cosmosDbService.InitializeAsync();
+    if (!initResult)
+    {
+      _logger.LogError("Failed to initialize Cosmos DB service for match region {MatchRegion}", matchRegion);
+      throw new InvalidOperationException("Cosmos DB initialization failed. Check connection configuration and credentials.");
+    }
 
     var allMatchDocuments = new List<MatchDocument>();
     var processedUnitsCount = 0;

@@ -28,12 +28,23 @@ public class CosmosDbService : ICosmosDbService
     _logger = logger;
     _databaseName = "player_stats";
   }
-
   public async Task<bool> InitializeAsync()
   {
     try
     {
       _logger.LogInformation("Initializing Cosmos DB service");
+
+      // First validate the connection
+      try
+      {
+        await _cosmosClient.ReadAccountAsync();
+        _logger.LogInformation("Cosmos DB connection validated successfully");
+      }
+      catch (Exception connEx)
+      {
+        _logger.LogError(connEx, "Failed to connect to Cosmos DB. Check endpoint and credentials.");
+        return false;
+      }
 
       // Create database if it doesn't exist
       var databaseResponse = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseName);
@@ -44,7 +55,7 @@ public class CosmosDbService : ICosmosDbService
     }
     catch (Exception ex)
     {
-      _logger.LogError(ex, "Failed to initialize Cosmos DB service");
+      _logger.LogError(ex, "Failed to initialize Cosmos DB service. Error: {ErrorMessage}", ex.Message);
       return false;
     }
   }
@@ -58,11 +69,11 @@ public class CosmosDbService : ICosmosDbService
     if (_database == null)
     {
       _logger.LogInformation("Database not initialized, initializing now...");
-      await InitializeAsync();
+      var initResult = await InitializeAsync();
 
-      if (_database == null)
+      if (!initResult || _database == null)
       {
-        throw new InvalidOperationException("Failed to initialize database.");
+        throw new InvalidOperationException("Failed to initialize Cosmos DB database. Check connection string and credentials.");
       }
     }
 
