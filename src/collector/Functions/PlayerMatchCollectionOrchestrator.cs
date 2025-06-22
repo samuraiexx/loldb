@@ -11,17 +11,18 @@ public class PlayerMatchCollectionOrchestrator
     var logger = context.CreateReplaySafeLogger("PlayerMatchCollectionOrchestrator");
     logger.LogInformation("Starting Match Collection Orchestrator");
 
-    var config = await context.CallActivityAsync<MatchCollectionConfig>("GetMatchCollectionConfigActivity", string.Empty);
-    var startTime = config.StartTime;
-    var endTime = context.CurrentUtcDateTime;
+    var maxMatchesPerUnit = context.GetInput<int>();
+    logger.LogInformation("Configuration: Max matches per unit = {MaxMatches}", maxMatchesPerUnit);
 
     // Initialize processing states for all combinations
     var unitsToProcess = Utils.GetAllUnitsToProcess();
-    logger.LogInformation("Initialized {Count} units to process", unitsToProcess.Count);
-
-    var PlayerMatchProcessingState = unitsToProcess
+    logger.LogInformation("Initialized {Count} units to process", unitsToProcess.Count); var PlayerMatchProcessingState = unitsToProcess
       .GroupBy(scope => scope.MatchRegion)
-      .Select(scope => new PlayerMatchProcessingState { ProcessingScope = scope.Select(unit => unit).ToList(), ScopeBegin = startTime, ScopeEnd = endTime })
+      .Select(scope => new PlayerMatchProcessingState
+      {
+        ProcessingScope = scope.ToList(),
+        MaxMatchesPerUnit = maxMatchesPerUnit
+      })
       .ToList();
 
     while (!PlayerMatchProcessingState.All(state => state.TotalProcessed == state.ProcessingScope.Count()))
@@ -66,14 +67,6 @@ public class PlayerMatchCollectionOrchestrator
       }
       logger.LogInformation("=== End Region Progress ===");
     }
-
-    // Save the updated configuration with startTime = endTime after processing is completed
-    logger.LogInformation("Updating configuration: setting startTime to {EndTime}", endTime);
-    var updatedConfig = new MatchCollectionConfig
-    {
-      StartTime = endTime
-    };
-    await context.CallActivityAsync("SaveMatchCollectionConfigActivity", updatedConfig);
 
     logger.LogInformation("Orchestration completed.");
   }

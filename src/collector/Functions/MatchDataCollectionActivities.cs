@@ -6,18 +6,15 @@ public class MatchDataCollectionActivities
 {
   private readonly IRiotApiService _riotApiService;
   private readonly ICosmosDbService _cosmosDbService;
-  private readonly IBlobStorageService _blobStorageService;
   private readonly ILogger<MatchDataCollectionActivities> _logger;
 
   public MatchDataCollectionActivities(
       IRiotApiService riotApiService,
       ICosmosDbService cosmosDbService,
-      IBlobStorageService blobStorageService,
       ILogger<MatchDataCollectionActivities> logger)
   {
     _riotApiService = riotApiService;
     _cosmosDbService = cosmosDbService;
-    _blobStorageService = blobStorageService;
     _logger = logger;
   }
 

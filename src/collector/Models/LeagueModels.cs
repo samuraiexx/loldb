@@ -145,8 +145,7 @@ public class MatchDataProcessingState
 public class PlayerMatchProcessingState
 {
   public required List<UnitToProcess> ProcessingScope { get; set; }
-  public required DateTime ScopeBegin { get; set; }
-  public required DateTime ScopeEnd { get; set; }
+  public int MaxMatchesPerUnit { get; set; }
   public int TotalProcessed { get; set; } = 0;
   public DateTime EndOfRateLimit { get; set; } = DateTime.MinValue;
 }
@@ -336,4 +335,15 @@ public class BanDto
 
   [JsonProperty("pickTurn")]
   public int PickTurn { get; set; }
+}
+
+// HTTP Request Models
+public class MatchCollectionRequest
+{
+  /// <summary>
+  /// Maximum number of matches to collect per unit (Region/Queue/Tier/Division).
+  /// Valid range: 1-10000. Default: 100.
+  /// </summary>
+  [JsonProperty("maxMatchesPerUnit")]
+  public int MaxMatchesPerUnit { get; set; }
 }

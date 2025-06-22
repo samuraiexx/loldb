@@ -28,7 +28,6 @@ public class HttpTriggers(ILogger<HttpTriggers> logger)
     await response.WriteAsJsonAsync(responseBody);
     return response;
   }
-
   [Function("StartMatchCollection")]
   public async Task<HttpResponseData> StartMatchCollection(
       [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
@@ -36,9 +35,37 @@ public class HttpTriggers(ILogger<HttpTriggers> logger)
   {
     _logger.LogInformation("Starting Match Collection orchestration");
 
-    var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("PlayerMatchCollectionOrchestrator");
+    // Parse request body for parameters
+    int maxMatchesPerUnit = 1000; // Default value
 
-    _logger.LogInformation("Started match collection orchestration with ID: {InstanceId}", instanceId);
+    var requestBody = await req.ReadAsStringAsync();
+    if (!string.IsNullOrEmpty(requestBody))
+    {
+      var requestData = System.Text.Json.JsonSerializer.Deserialize<MatchCollectionRequest>(requestBody);
+
+      // Validate MaxMatchesPerUnit
+      if (requestData?.MaxMatchesPerUnit > 0)
+      {
+        if (requestData.MaxMatchesPerUnit > 10000)
+        {
+          _logger.LogWarning("MaxMatchesPerUnit {RequestedValue} exceeds maximum limit, using 10000", requestData.MaxMatchesPerUnit);
+          maxMatchesPerUnit = 10000;
+        }
+        else
+        {
+          maxMatchesPerUnit = requestData.MaxMatchesPerUnit;
+        }
+        _logger.LogInformation("Using custom MaxMatchesPerUnit: {MaxMatches}", maxMatchesPerUnit);
+      }
+      else if (requestData?.MaxMatchesPerUnit <= 0)
+      {
+        _logger.LogWarning("Invalid MaxMatchesPerUnit {RequestedValue}, using default: {Default}", requestData.MaxMatchesPerUnit, maxMatchesPerUnit);
+      }
+    }
+
+    var instanceId = await client.ScheduleNewOrchestrationInstanceAsync("PlayerMatchCollectionOrchestrator", maxMatchesPerUnit);
+
+    _logger.LogInformation("Started match collection orchestration with ID: {InstanceId}, MaxMatchesPerUnit: {MaxMatches}", instanceId, maxMatchesPerUnit);
 
     var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
 
@@ -46,6 +73,7 @@ public class HttpTriggers(ILogger<HttpTriggers> logger)
     {
       message = "Match Collection started successfully",
       instanceId,
+      maxMatchesPerUnit
     };
 
     await response.WriteAsJsonAsync(responseBody);
