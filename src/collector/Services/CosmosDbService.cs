@@ -179,61 +179,50 @@ public class CosmosDbService : ICosmosDbService
   }
   public async Task<List<string>> GetRankedPuuidsAsync(string queueType, string tier, string division, string region)
   {
-    try
+    var container = await GetContainerAsync(queueType);
+    var queryDefinition = new QueryDefinition(
+      "SELECT c.puuid FROM c WHERE c.snapshot != null AND UPPER(c.snapshot.tier) = @tier AND UPPER(c.snapshot.rank) = @division AND c.region = @region")
+      .WithParameter("@tier", tier.ToUpper())
+      .WithParameter("@division", division.ToUpper())
+      .WithParameter("@region", region);
+
+    var puuids = new List<string>();
+    var iterator = container.GetItemQueryIterator<dynamic>(queryDefinition, requestOptions: new QueryRequestOptions
     {
-      var container = await GetContainerAsync(queueType); var queryDefinition = new QueryDefinition(
-        "SELECT TOP 500 c.puuid FROM c WHERE c.snapshot != null AND UPPER(c.snapshot.tier) = @tier AND UPPER(c.snapshot.rank) = @division AND c.region = @region ORDER BY RAND()")
-        .WithParameter("@tier", tier.ToUpper())
-        .WithParameter("@division", division.ToUpper())
-        .WithParameter("@region", region);
+      PartitionKey = new PartitionKey(region)
+    });
 
-      var puuids = new List<string>();
-      var iterator = container.GetItemQueryIterator<dynamic>(queryDefinition, requestOptions: new QueryRequestOptions
+    while (iterator.HasMoreResults)
+    {
+      var response = await iterator.ReadNextAsync();
+      foreach (var item in response)
       {
-        PartitionKey = new PartitionKey(region)
-      });
-
-      while (iterator.HasMoreResults)
-      {
-        var response = await iterator.ReadNextAsync();
-        foreach (var item in response)
+        if (item?.puuid != null)
         {
-          if (item?.puuid != null)
-          {
-            puuids.Add((string)item.puuid);
-          }
+          puuids.Add((string)item.puuid);
         }
       }
-
-      _logger.LogInformation("Retrieved {Count} PUUIDs for exact rank {Tier} {Division} for {QueueType} in {Region}",
-          puuids.Count, tier, division, queueType, region);
-
-      return puuids;
     }
-    catch (Exception ex)
+
+    // Randomly shuffle the list in memory
+    var random = new Random();
+    for (int i = puuids.Count - 1; i > 0; i--)
     {
-      _logger.LogError(ex, "Error getting ranked PUUIDs for {QueueType} in {Region}", queueType, region);
-      throw;
+      int j = random.Next(i + 1);
+      (puuids[i], puuids[j]) = (puuids[j], puuids[i]);
     }
+
+    _logger.LogInformation("Retrieved {TotalCount} PUUIDs for exact rank {Tier} {Division} for {QueueType} in {Region}, returning {ReturnCount} randomly sampled",
+        puuids.Count, tier, division, queueType, region, result.Count);
+
+    return result;
   }
 
-  public async Task<MatchDocument?> GetMatchAsync(string matchId, string region)
+  public async Task<MatchDocument> GetMatchAsync(string matchId, string region)
   {
-    try
-    {
-      var container = await GetContainerAsync("matches");
-      var response = await container.ReadItemAsync<MatchDocument>(matchId, new PartitionKey(region));
-      return response.Resource;
-    }
-    catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-    {
-      return null;
-    }
-    catch (Exception ex)
-    {
-      _logger.LogError(ex, "Error getting match {MatchId} for region {Region}", matchId, region);
-      throw;
-    }
+    var container = await GetContainerAsync("matches");
+    var response = await container.ReadItemAsync<MatchDocument>(matchId, new PartitionKey(region));
+    return response.Resource;
   }
 
   public async Task UpsertMatchAsync(MatchDocument match)
