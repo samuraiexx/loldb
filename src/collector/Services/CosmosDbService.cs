@@ -213,9 +213,9 @@ public class CosmosDbService : ICosmosDbService
     }
 
     _logger.LogInformation("Retrieved {TotalCount} PUUIDs for exact rank {Tier} {Division} for {QueueType} in {Region}, returning {ReturnCount} randomly sampled",
-        puuids.Count, tier, division, queueType, region, result.Count);
+        puuids.Count, tier, division, queueType, region, puuids.Count);
 
-    return result;
+    return puuids;
   }
 
   public async Task<MatchDocument> GetMatchAsync(string matchId, string region)
