@@ -181,10 +181,8 @@ public class CosmosDbService : ICosmosDbService
   {
     try
     {
-      var container = await GetContainerAsync(queueType);
-
-      var queryDefinition = new QueryDefinition(
-        "SELECT c.puuid FROM c WHERE c.snapshot != null AND UPPER(c.snapshot.tier) = @tier AND UPPER(c.snapshot.rank) = @division AND c.region = @region")
+      var container = await GetContainerAsync(queueType); var queryDefinition = new QueryDefinition(
+        "SELECT TOP 500 c.puuid FROM c WHERE c.snapshot != null AND UPPER(c.snapshot.tier) = @tier AND UPPER(c.snapshot.rank) = @division AND c.region = @region ORDER BY RAND()")
         .WithParameter("@tier", tier.ToUpper())
         .WithParameter("@division", division.ToUpper())
         .WithParameter("@region", region);
