@@ -171,7 +171,7 @@ public class RateLimitInfo
 public static class Constants
 {
   public static readonly string[] Regions = { "BR1", "EUN1", "EUW1", "JP1", "KR", "LA1", "LA2", "ME1", "NA1", "OC1", "RU", "SG2", "TR1", "TW2", "VN2" };
-  public static readonly string[] QueueTypes = { "RANKED_SOLO_5x5", "RANKED_FLEX_SR" };
+  public static readonly string[] QueueTypes = { "RANKED_SOLO_5x5" };
   public static readonly string[] Tiers = { "CHALLENGER", "GRANDMASTER", "MASTER", "DIAMOND", "EMERALD", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON" };
   public static readonly string[] Divisions = { "I", "II", "III", "IV" };
   public static readonly string[] HighTiers = { "CHALLENGER", "GRANDMASTER", "MASTER" };

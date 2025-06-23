@@ -239,7 +239,6 @@ public class CosmosDbService : ICosmosDbService
       throw;
     }
   }
-
   public async Task BatchUpsertMatchesAsync(List<MatchDocument> matches, string region)
   {
     if (!matches.Any())
@@ -249,50 +248,101 @@ public class CosmosDbService : ICosmosDbService
     }
 
     var container = await GetContainerAsync("matches");
-    const int batchSize = 50;
-    var batches = matches
-        .Select((item, index) => new { item, index })
-        .GroupBy(x => x.index / batchSize)
-        .Select(g => g.Select(x => x.item).ToList())
-        .ToList();
 
-    _logger.LogInformation("Batch upserting {TotalCount} matches in {BatchCount} batches for region {Region}",
-        matches.Count, batches.Count, region);
+    // Group matches by their actual region to ensure partition key consistency
+    var matchesByRegion = matches.GroupBy(m => m.Region).ToList();
+
+    _logger.LogInformation("Batch upserting {TotalCount} matches across {RegionCount} regions",
+        matches.Count, matchesByRegion.Count);
 
     var totalProcessed = 0;
     var totalErrors = 0;
 
-    foreach (var batch in batches)
+    foreach (var regionGroup in matchesByRegion)
     {
-      var transactionalBatch = container.CreateTransactionalBatch(new PartitionKey(region));
+      var regionMatches = regionGroup.ToList();
+      var actualRegion = regionGroup.Key;
 
-      foreach (var match in batch)
-      {
-        transactionalBatch.UpsertItem(match);
-      }
+      const int batchSize = 50;
+      var batches = regionMatches
+          .Select((item, index) => new { item, index })
+          .GroupBy(x => x.index / batchSize)
+          .Select(g => g.Select(x => x.item).ToList())
+          .ToList();
 
-      var batchResponse = await transactionalBatch.ExecuteAsync();
+      _logger.LogDebug("Processing {Count} matches in {BatchCount} batches for region {Region}",
+          regionMatches.Count, batches.Count, actualRegion);
 
-      if (batchResponse.IsSuccessStatusCode)
+      foreach (var batch in batches)
       {
-        totalProcessed += batch.Count;
-        _logger.LogDebug("Successfully batch upserted {Count} matches for region {Region}",
-            batch.Count, region);
-      }
-      else
-      {
-        _logger.LogError("Batch upsert failed with status code: {StatusCode} for region {Region}",
-            batchResponse.StatusCode, region);
-        totalErrors += batch.Count;
+        try
+        {
+          var transactionalBatch = container.CreateTransactionalBatch(new PartitionKey(actualRegion));
+
+          foreach (var match in batch)
+          {
+            transactionalBatch.UpsertItem(match);
+          }
+
+          var batchResponse = await transactionalBatch.ExecuteAsync();
+
+          if (batchResponse.IsSuccessStatusCode)
+          {
+            totalProcessed += batch.Count;
+            _logger.LogDebug("Successfully batch upserted {Count} matches for region {Region}",
+                batch.Count, actualRegion);
+          }
+          else
+          {
+            _logger.LogError("Batch upsert failed with status code: {StatusCode} for region {Region}. Falling back to individual upserts.",
+                batchResponse.StatusCode, actualRegion);
+
+            // Fallback to individual upserts for this batch
+            foreach (var match in batch)
+            {
+              try
+              {
+                await container.UpsertItemAsync(match, new PartitionKey(match.Region));
+                totalProcessed++;
+              }
+              catch (Exception ex)
+              {
+                _logger.LogError(ex, "Failed to upsert individual match {MatchId} for region {Region}",
+                    match.MatchId, match.Region);
+                totalErrors++;
+              }
+            }
+          }
+        }
+        catch (Exception ex)
+        {
+          _logger.LogError(ex, "Exception during batch upsert for region {Region}. Falling back to individual upserts.", actualRegion);
+
+          // Fallback to individual upserts for this batch
+          foreach (var match in batch)
+          {
+            try
+            {
+              await container.UpsertItemAsync(match, new PartitionKey(match.Region));
+              totalProcessed++;
+            }
+            catch (Exception individualEx)
+            {
+              _logger.LogError(individualEx, "Failed to upsert individual match {MatchId} for region {Region}",
+                  match.MatchId, match.Region);
+              totalErrors++;
+            }
+          }
+        }
       }
     }
 
-    _logger.LogInformation("Batch upsert completed for region {Region}. Processed: {Processed}, Errors: {Errors}",
-        region, totalProcessed, totalErrors);
+    _logger.LogInformation("Batch upsert completed. Processed: {Processed}, Errors: {Errors}",
+        totalProcessed, totalErrors);
 
     if (totalErrors > 0)
     {
-      throw new Exception($"Batch upsert completed with {totalErrors} errors for region {region}");
+      throw new Exception($"Batch upsert completed with {totalErrors} errors");
     }
   }
   public async Task<List<MatchDocument>> GetUnprocessedMatchesAsync(string region, int maxCount = 120, DateTime? maxCreatedTime = null)
