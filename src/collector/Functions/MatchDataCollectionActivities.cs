@@ -113,9 +113,21 @@ public class MatchDataCollectionActivities
       foreach (var regionGroup in matchesByRegion)
       {
         var region = regionGroup.Key;
-        var matches = regionGroup.ToList(); _logger.LogInformation("Batch upserting {Count} matches for region {Region}", matches.Count, region);
+        var matches = regionGroup.ToList();
 
-        await _cosmosDbService.BatchUpsertMatchesAsync(matches, region);
+        _logger.LogInformation("Batch upserting {Count} matches for region {Region}", matches.Count, region);
+        var result = await _cosmosDbService.BatchUpsertMatchesAsync(matches, region);
+
+        if (result.HasErrors)
+        {
+          _logger.LogWarning("Batch upsert completed with {ErrorCount} errors out of {TotalCount} matches for region {Region}. Processed: {ProcessedCount}",
+              result.TotalErrors, matches.Count, region, result.TotalProcessed);
+        }
+        else
+        {
+          _logger.LogInformation("Successfully batch upserted all {Count} matches for region {Region}",
+              result.TotalProcessed, region);
+        }
       }
     }
     processingState.TotalProcessed += processedMatches.Count;

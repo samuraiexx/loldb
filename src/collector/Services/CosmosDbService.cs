@@ -1,6 +1,14 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 
+public class BatchUpsertResult
+{
+  public int TotalProcessed { get; set; }
+  public int TotalErrors { get; set; }
+  public bool HasErrors => TotalErrors > 0;
+  public bool IsSuccess => TotalErrors == 0;
+}
+
 public interface ICosmosDbService
 {
   Task<PlayerStatsDocument?> GetPlayerStatsAsync(string puuid, string queueType, string region);
@@ -10,7 +18,7 @@ public interface ICosmosDbService
   Task<List<string>> GetRankedPuuidsAsync(string queueType, string tier, string division, string region);
   Task<MatchDocument?> GetMatchAsync(string matchId, string region);
   Task UpsertMatchAsync(MatchDocument match);
-  Task BatchUpsertMatchesAsync(List<MatchDocument> matches, string region);
+  Task<BatchUpsertResult> BatchUpsertMatchesAsync(List<MatchDocument> matches, string region);
   Task<List<MatchDocument>> GetUnprocessedMatchesAsync(string region, int maxCount = 120, DateTime? maxCreatedTime = null);
 }
 
@@ -218,7 +226,7 @@ public class CosmosDbService : ICosmosDbService
     return puuids;
   }
 
-  public async Task<MatchDocument> GetMatchAsync(string matchId, string region)
+  public async Task<MatchDocument?> GetMatchAsync(string matchId, string region)
   {
     var container = await GetContainerAsync("matches");
     var response = await container.ReadItemAsync<MatchDocument>(matchId, new PartitionKey(region));
@@ -239,12 +247,12 @@ public class CosmosDbService : ICosmosDbService
       throw;
     }
   }
-  public async Task BatchUpsertMatchesAsync(List<MatchDocument> matches, string region)
+  public async Task<BatchUpsertResult> BatchUpsertMatchesAsync(List<MatchDocument> matches, string region)
   {
     if (!matches.Any())
     {
       _logger.LogDebug("No matches to batch upsert");
-      return;
+      return new BatchUpsertResult { TotalProcessed = 0, TotalErrors = 0 };
     }
 
     var container = await GetContainerAsync("matches");
@@ -340,10 +348,7 @@ public class CosmosDbService : ICosmosDbService
     _logger.LogInformation("Batch upsert completed. Processed: {Processed}, Errors: {Errors}",
         totalProcessed, totalErrors);
 
-    if (totalErrors > 0)
-    {
-      throw new Exception($"Batch upsert completed with {totalErrors} errors");
-    }
+    return new BatchUpsertResult { TotalProcessed = totalProcessed, TotalErrors = totalErrors };
   }
   public async Task<List<MatchDocument>> GetUnprocessedMatchesAsync(string region, int maxCount = 120, DateTime? maxCreatedTime = null)
   {
