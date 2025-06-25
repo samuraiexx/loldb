@@ -313,7 +313,416 @@ public class ParticipantDto
   [JsonProperty("win")]
   public bool Win { get; set; }
 
-  // Add other participant fields as needed
+  // Ping-related fields
+  [JsonProperty("allInPings")]
+  public int AllInPings { get; set; }
+
+  [JsonProperty("assistMePings")]
+  public int AssistMePings { get; set; }
+
+  [JsonProperty("commandPings")]
+  public int CommandPings { get; set; }
+
+  [JsonProperty("enemyMissingPings")]
+  public int EnemyMissingPings { get; set; }
+
+  [JsonProperty("enemyVisionPings")]
+  public int EnemyVisionPings { get; set; }
+
+  [JsonProperty("getBackPings")]
+  public int GetBackPings { get; set; }
+
+  [JsonProperty("holdPings")]
+  public int HoldPings { get; set; }
+
+  [JsonProperty("needVisionPings")]
+  public int NeedVisionPings { get; set; }
+
+  [JsonProperty("onMyWayPings")]
+  public int OnMyWayPings { get; set; }
+
+  [JsonProperty("pushPings")]
+  public int PushPings { get; set; }
+
+  [JsonProperty("visionClearedPings")]
+  public int VisionClearedPings { get; set; }
+
+  // Champion stats
+  [JsonProperty("baronKills")]
+  public int BaronKills { get; set; }
+
+  [JsonProperty("bountyLevel")]
+  public int BountyLevel { get; set; }
+
+  [JsonProperty("champExperience")]
+  public int ChampExperience { get; set; }
+
+  [JsonProperty("champLevel")]
+  public int ChampLevel { get; set; }
+
+  [JsonProperty("championTransform")]
+  public int ChampionTransform { get; set; }
+
+  [JsonProperty("consumablesPurchased")]
+  public int ConsumablesPurchased { get; set; }
+
+  // Damage stats
+  [JsonProperty("damageDealtToBuildings")]
+  public int DamageDealtToBuildings { get; set; }
+
+  [JsonProperty("damageDealtToObjectives")]
+  public int DamageDealtToObjectives { get; set; }
+
+  [JsonProperty("damageDealtToTurrets")]
+  public int DamageDealtToTurrets { get; set; }
+
+  [JsonProperty("damageSelfMitigated")]
+  public int DamageSelfMitigated { get; set; }
+
+  [JsonProperty("magicDamageDealt")]
+  public int MagicDamageDealt { get; set; }
+
+  [JsonProperty("magicDamageDealtToChampions")]
+  public int MagicDamageDealtToChampions { get; set; }
+
+  [JsonProperty("magicDamageTaken")]
+  public int MagicDamageTaken { get; set; }
+
+  [JsonProperty("physicalDamageDealt")]
+  public int PhysicalDamageDealt { get; set; }
+
+  [JsonProperty("physicalDamageDealtToChampions")]
+  public int PhysicalDamageDealtToChampions { get; set; }
+
+  [JsonProperty("physicalDamageTaken")]
+  public int PhysicalDamageTaken { get; set; }
+
+  [JsonProperty("totalDamageDealt")]
+  public int TotalDamageDealt { get; set; }
+
+  [JsonProperty("totalDamageDealtToChampions")]
+  public int TotalDamageDealtToChampions { get; set; }
+
+  [JsonProperty("totalDamageTaken")]
+  public int TotalDamageTaken { get; set; }
+
+  [JsonProperty("trueDamageDealt")]
+  public int TrueDamageDealt { get; set; }
+
+  [JsonProperty("trueDamageDealtToChampions")]
+  public int TrueDamageDealtToChampions { get; set; }
+
+  [JsonProperty("trueDamageTaken")]
+  public int TrueDamageTaken { get; set; }
+
+  [JsonProperty("totalDamageShieldedOnTeammates")]
+  public int TotalDamageShieldedOnTeammates { get; set; }
+
+  // Vision and wards
+  [JsonProperty("detectorWardsPlaced")]
+  public int DetectorWardsPlaced { get; set; }
+
+  [JsonProperty("sightWardsBoughtInGame")]
+  public int SightWardsBoughtInGame { get; set; }
+
+  [JsonProperty("visionScore")]
+  public int VisionScore { get; set; }
+
+  [JsonProperty("visionWardsBoughtInGame")]
+  public int VisionWardsBoughtInGame { get; set; }
+
+  [JsonProperty("wardsKilled")]
+  public int WardsKilled { get; set; }
+
+  [JsonProperty("wardsPlaced")]
+  public int WardsPlaced { get; set; }
+
+  // Kills and objectives
+  [JsonProperty("doubleKills")]
+  public int DoubleKills { get; set; }
+
+  [JsonProperty("tripleKills")]
+  public int TripleKills { get; set; }
+
+  [JsonProperty("quadraKills")]
+  public int QuadraKills { get; set; }
+
+  [JsonProperty("pentaKills")]
+  public int PentaKills { get; set; }
+
+  [JsonProperty("unrealKills")]
+  public int UnrealKills { get; set; }
+
+  [JsonProperty("killingSprees")]
+  public int KillingSprees { get; set; }
+
+  [JsonProperty("largestKillingSpree")]
+  public int LargestKillingSpree { get; set; }
+
+  [JsonProperty("largestMultiKill")]
+  public int LargestMultiKill { get; set; }
+
+  [JsonProperty("dragonKills")]
+  public int DragonKills { get; set; }
+
+  [JsonProperty("inhibitorKills")]
+  public int InhibitorKills { get; set; }
+
+  [JsonProperty("inhibitorTakedowns")]
+  public int InhibitorTakedowns { get; set; }
+
+  [JsonProperty("inhibitorsLost")]
+  public int InhibitorsLost { get; set; }
+
+  [JsonProperty("nexusKills")]
+  public int NexusKills { get; set; }
+
+  [JsonProperty("nexusTakedowns")]
+  public int NexusTakedowns { get; set; }
+
+  [JsonProperty("nexusLost")]
+  public int NexusLost { get; set; }
+
+  [JsonProperty("objectivesStolen")]
+  public int ObjectivesStolen { get; set; }
+
+  [JsonProperty("objectivesStolenAssists")]
+  public int ObjectivesStolenAssists { get; set; }
+
+  [JsonProperty("turretKills")]
+  public int TurretKills { get; set; }
+
+  [JsonProperty("turretTakedowns")]
+  public int TurretTakedowns { get; set; }
+
+  [JsonProperty("turretsLost")]
+  public int TurretsLost { get; set; }
+
+  // Game state flags
+  [JsonProperty("firstBloodAssist")]
+  public bool FirstBloodAssist { get; set; }
+
+  [JsonProperty("firstBloodKill")]
+  public bool FirstBloodKill { get; set; }
+
+  [JsonProperty("firstTowerAssist")]
+  public bool FirstTowerAssist { get; set; }
+
+  [JsonProperty("firstTowerKill")]
+  public bool FirstTowerKill { get; set; }
+
+  [JsonProperty("gameEndedInEarlySurrender")]
+  public bool GameEndedInEarlySurrender { get; set; }
+
+  [JsonProperty("gameEndedInSurrender")]
+  public bool GameEndedInSurrender { get; set; }
+
+  [JsonProperty("teamEarlySurrendered")]
+  public bool TeamEarlySurrendered { get; set; }
+
+  [JsonProperty("eligibleForProgression")]
+  public bool EligibleForProgression { get; set; }
+
+  // Gold and economy
+  [JsonProperty("goldEarned")]
+  public int GoldEarned { get; set; }
+
+  [JsonProperty("goldSpent")]
+  public int GoldSpent { get; set; }
+
+  // Items
+  [JsonProperty("item0")]
+  public int Item0 { get; set; }
+
+  [JsonProperty("item1")]
+  public int Item1 { get; set; }
+
+  [JsonProperty("item2")]
+  public int Item2 { get; set; }
+
+  [JsonProperty("item3")]
+  public int Item3 { get; set; }
+
+  [JsonProperty("item4")]
+  public int Item4 { get; set; }
+
+  [JsonProperty("item5")]
+  public int Item5 { get; set; }
+
+  [JsonProperty("item6")]
+  public int Item6 { get; set; }
+
+  [JsonProperty("itemsPurchased")]
+  public int ItemsPurchased { get; set; }
+
+  // Position and role
+  [JsonProperty("individualPosition")]
+  public string IndividualPosition { get; set; } = string.Empty;
+
+  [JsonProperty("teamPosition")]
+  public string TeamPosition { get; set; } = string.Empty;
+
+  [JsonProperty("lane")]
+  public string Lane { get; set; } = string.Empty;
+
+  [JsonProperty("role")]
+  public string Role { get; set; } = string.Empty;
+
+  // Combat stats
+  [JsonProperty("largestCriticalStrike")]
+  public int LargestCriticalStrike { get; set; }
+
+  [JsonProperty("longestTimeSpentLiving")]
+  public int LongestTimeSpentLiving { get; set; }
+
+  // Minions and jungle
+  [JsonProperty("neutralMinionsKilled")]
+  public int NeutralMinionsKilled { get; set; }
+
+  [JsonProperty("totalMinionsKilled")]
+  public int TotalMinionsKilled { get; set; }
+
+  [JsonProperty("totalAllyJungleMinionsKilled")]
+  public int TotalAllyJungleMinionsKilled { get; set; }
+
+  [JsonProperty("totalEnemyJungleMinionsKilled")]
+  public int TotalEnemyJungleMinionsKilled { get; set; }
+
+  // Healing and support
+  [JsonProperty("totalHeal")]
+  public int TotalHeal { get; set; }
+
+  [JsonProperty("totalHealsOnTeammates")]
+  public int TotalHealsOnTeammates { get; set; }
+
+  [JsonProperty("totalUnitsHealed")]
+  public int TotalUnitsHealed { get; set; }
+
+  // Time-based stats
+  [JsonProperty("timeCCingOthers")]
+  public int TimeCCingOthers { get; set; }
+
+  [JsonProperty("timePlayed")]
+  public int TimePlayed { get; set; }
+
+  [JsonProperty("totalTimeCCDealt")]
+  public int TotalTimeCCDealt { get; set; }
+
+  [JsonProperty("totalTimeSpentDead")]
+  public int TotalTimeSpentDead { get; set; }
+
+  // Player scores (custom game modes)
+  [JsonProperty("playerScore0")]
+  public int PlayerScore0 { get; set; }
+
+  [JsonProperty("playerScore1")]
+  public int PlayerScore1 { get; set; }
+
+  [JsonProperty("playerScore2")]
+  public int PlayerScore2 { get; set; }
+
+  [JsonProperty("playerScore3")]
+  public int PlayerScore3 { get; set; }
+
+  [JsonProperty("playerScore4")]
+  public int PlayerScore4 { get; set; }
+
+  [JsonProperty("playerScore5")]
+  public int PlayerScore5 { get; set; }
+
+  [JsonProperty("playerScore6")]
+  public int PlayerScore6 { get; set; }
+
+  [JsonProperty("playerScore7")]
+  public int PlayerScore7 { get; set; }
+
+  [JsonProperty("playerScore8")]
+  public int PlayerScore8 { get; set; }
+
+  [JsonProperty("playerScore9")]
+  public int PlayerScore9 { get; set; }
+
+  [JsonProperty("playerScore10")]
+  public int PlayerScore10 { get; set; }
+
+  [JsonProperty("playerScore11")]
+  public int PlayerScore11 { get; set; }
+
+  // Placement and augments
+  [JsonProperty("placement")]
+  public int Placement { get; set; }
+
+  [JsonProperty("playerAugment1")]
+  public int PlayerAugment1 { get; set; }
+
+  [JsonProperty("playerAugment2")]
+  public int PlayerAugment2 { get; set; }
+
+  [JsonProperty("playerAugment3")]
+  public int PlayerAugment3 { get; set; }
+
+  [JsonProperty("playerAugment4")]
+  public int PlayerAugment4 { get; set; }
+
+  [JsonProperty("playerSubteamId")]
+  public int PlayerSubteamId { get; set; }
+
+  [JsonProperty("subteamPlacement")]
+  public int SubteamPlacement { get; set; }
+
+  // Summoner info
+  [JsonProperty("profileIcon")]
+  public int ProfileIcon { get; set; }
+
+  [JsonProperty("riotIdGameName")]
+  public string RiotIdGameName { get; set; } = string.Empty;
+
+  [JsonProperty("riotIdTagline")]
+  public string RiotIdTagline { get; set; } = string.Empty;
+
+  [JsonProperty("summonerId")]
+  public string SummonerId { get; set; } = string.Empty;
+
+  [JsonProperty("summonerLevel")]
+  public int SummonerLevel { get; set; }
+
+  [JsonProperty("summonerName")]
+  public string SummonerName { get; set; } = string.Empty;
+
+  // Spell casts
+  [JsonProperty("spell1Casts")]
+  public int Spell1Casts { get; set; }
+
+  [JsonProperty("spell2Casts")]
+  public int Spell2Casts { get; set; }
+
+  [JsonProperty("spell3Casts")]
+  public int Spell3Casts { get; set; }
+
+  [JsonProperty("spell4Casts")]
+  public int Spell4Casts { get; set; }
+
+  [JsonProperty("summoner1Casts")]
+  public int Summoner1Casts { get; set; }
+
+  [JsonProperty("summoner1Id")]
+  public int Summoner1Id { get; set; }
+
+  [JsonProperty("summoner2Casts")]
+  public int Summoner2Casts { get; set; }
+
+  [JsonProperty("summoner2Id")]
+  public int Summoner2Id { get; set; }
+
+  // Complex objects
+  [JsonProperty("challenges")]
+  public ChallengesDto? Challenges { get; set; }
+
+  [JsonProperty("missions")]
+  public MissionsDto? Missions { get; set; }
+
+  [JsonProperty("perks")]
+  public PerksDto? Perks { get; set; }
 }
 
 public class TeamDto
@@ -346,4 +755,533 @@ public class MatchCollectionRequest
   /// </summary>
   [JsonProperty("maxMatchesPerUnit")]
   public int MaxMatchesPerUnit { get; set; }
+}
+
+// Complex DTOs for ParticipantDto
+public class ChallengesDto
+{
+  [JsonProperty("12AssistStreakCount")]
+  public int TwelveAssistStreakCount { get; set; }
+
+  [JsonProperty("baronBuffGoldAdvantageOverThreshold")]
+  public int BaronBuffGoldAdvantageOverThreshold { get; set; }
+
+  [JsonProperty("controlWardTimeCoverageInRiverOrEnemyHalf")]
+  public float ControlWardTimeCoverageInRiverOrEnemyHalf { get; set; }
+
+  [JsonProperty("earliestBaron")]
+  public int EarliestBaron { get; set; }
+
+  [JsonProperty("earliestDragonTakedown")]
+  public int EarliestDragonTakedown { get; set; }
+
+  [JsonProperty("earliestElderDragon")]
+  public int EarliestElderDragon { get; set; }
+
+  [JsonProperty("earlyLaningPhaseGoldExpAdvantage")]
+  public int EarlyLaningPhaseGoldExpAdvantage { get; set; }
+
+  [JsonProperty("fasterSupportQuestCompletion")]
+  public int FasterSupportQuestCompletion { get; set; }
+
+  [JsonProperty("fastestLegendary")]
+  public int FastestLegendary { get; set; }
+
+  [JsonProperty("hadAfkTeammate")]
+  public int HadAfkTeammate { get; set; }
+
+  [JsonProperty("highestChampionDamage")]
+  public int HighestChampionDamage { get; set; }
+
+  [JsonProperty("highestCrowdControlScore")]
+  public int HighestCrowdControlScore { get; set; }
+
+  [JsonProperty("highestWardKills")]
+  public int HighestWardKills { get; set; }
+
+  [JsonProperty("junglerKillsEarlyJungle")]
+  public int JunglerKillsEarlyJungle { get; set; }
+
+  [JsonProperty("killsOnLanersEarlyJungleAsJungler")]
+  public int KillsOnLanersEarlyJungleAsJungler { get; set; }
+
+  [JsonProperty("laningPhaseGoldExpAdvantage")]
+  public int LaningPhaseGoldExpAdvantage { get; set; }
+
+  [JsonProperty("legendaryCount")]
+  public int LegendaryCount { get; set; }
+
+  [JsonProperty("maxCsAdvantageOnLaneOpponent")]
+  public float MaxCsAdvantageOnLaneOpponent { get; set; }
+
+  [JsonProperty("maxLevelLeadLaneOpponent")]
+  public int MaxLevelLeadLaneOpponent { get; set; }
+
+  [JsonProperty("mostWardsDestroyedOneSweeper")]
+  public int MostWardsDestroyedOneSweeper { get; set; }
+
+  [JsonProperty("mythicItemUsed")]
+  public int MythicItemUsed { get; set; }
+
+  [JsonProperty("playedChampSelectPosition")]
+  public int PlayedChampSelectPosition { get; set; }
+
+  [JsonProperty("soloTurretsLategame")]
+  public int SoloTurretsLategame { get; set; }
+
+  [JsonProperty("takedownsFirst25Minutes")]
+  public int TakedownsFirst25Minutes { get; set; }
+
+  [JsonProperty("teleportTakedowns")]
+  public int TeleportTakedowns { get; set; }
+
+  [JsonProperty("thirdInhibitorDestroyedTime")]
+  public int ThirdInhibitorDestroyedTime { get; set; }
+
+  [JsonProperty("threeWardsOneSweeperCount")]
+  public int ThreeWardsOneSweeperCount { get; set; }
+
+  [JsonProperty("visionScoreAdvantageLaneOpponent")]
+  public float VisionScoreAdvantageLaneOpponent { get; set; }
+
+  [JsonProperty("InfernalScalePickup")]
+  public int InfernalScalePickup { get; set; }
+
+  [JsonProperty("fistBumpParticipation")]
+  public int FistBumpParticipation { get; set; }
+
+  [JsonProperty("voidMonsterKill")]
+  public int VoidMonsterKill { get; set; }
+
+  [JsonProperty("abilityUses")]
+  public int AbilityUses { get; set; }
+
+  [JsonProperty("acesBefore15Minutes")]
+  public int AcesBefore15Minutes { get; set; }
+
+  [JsonProperty("alliedJungleMonsterKills")]
+  public float AlliedJungleMonsterKills { get; set; }
+
+  [JsonProperty("baronTakedowns")]
+  public int BaronTakedowns { get; set; }
+
+  [JsonProperty("blastConeOppositeOpponentCount")]
+  public int BlastConeOppositeOpponentCount { get; set; }
+
+  [JsonProperty("bountyGold")]
+  public int BountyGold { get; set; }
+
+  [JsonProperty("buffsStolen")]
+  public int BuffsStolen { get; set; }
+
+  [JsonProperty("completeSupportQuestInTime")]
+  public int CompleteSupportQuestInTime { get; set; }
+
+  [JsonProperty("controlWardsPlaced")]
+  public int ControlWardsPlaced { get; set; }
+
+  [JsonProperty("damagePerMinute")]
+  public float DamagePerMinute { get; set; }
+
+  [JsonProperty("damageTakenOnTeamPercentage")]
+  public float DamageTakenOnTeamPercentage { get; set; }
+
+  [JsonProperty("dancedWithRiftHerald")]
+  public int DancedWithRiftHerald { get; set; }
+
+  [JsonProperty("deathsByEnemyChamps")]
+  public int DeathsByEnemyChamps { get; set; }
+
+  [JsonProperty("dodgeSkillShotsSmallWindow")]
+  public int DodgeSkillShotsSmallWindow { get; set; }
+
+  [JsonProperty("doubleAces")]
+  public int DoubleAces { get; set; }
+
+  [JsonProperty("dragonTakedowns")]
+  public int DragonTakedowns { get; set; }
+
+  [JsonProperty("legendaryItemUsed")]
+  public List<int> LegendaryItemUsed { get; set; } = new();
+
+  [JsonProperty("effectiveHealAndShielding")]
+  public float EffectiveHealAndShielding { get; set; }
+
+  [JsonProperty("elderDragonKillsWithOpposingSoul")]
+  public int ElderDragonKillsWithOpposingSoul { get; set; }
+
+  [JsonProperty("elderDragonMultikills")]
+  public int ElderDragonMultikills { get; set; }
+
+  [JsonProperty("enemyChampionImmobilizations")]
+  public int EnemyChampionImmobilizations { get; set; }
+
+  [JsonProperty("enemyJungleMonsterKills")]
+  public float EnemyJungleMonsterKills { get; set; }
+
+  [JsonProperty("epicMonsterKillsNearEnemyJungler")]
+  public int EpicMonsterKillsNearEnemyJungler { get; set; }
+
+  [JsonProperty("epicMonsterKillsWithin30SecondsOfSpawn")]
+  public int EpicMonsterKillsWithin30SecondsOfSpawn { get; set; }
+
+  [JsonProperty("epicMonsterSteals")]
+  public int EpicMonsterSteals { get; set; }
+
+  [JsonProperty("epicMonsterStolenWithoutSmite")]
+  public int EpicMonsterStolenWithoutSmite { get; set; }
+
+  [JsonProperty("firstTurretKilled")]
+  public int FirstTurretKilled { get; set; }
+
+  [JsonProperty("firstTurretKilledTime")]
+  public float FirstTurretKilledTime { get; set; }
+
+  [JsonProperty("flawlessAces")]
+  public int FlawlessAces { get; set; }
+
+  [JsonProperty("fullTeamTakedown")]
+  public int FullTeamTakedown { get; set; }
+
+  [JsonProperty("gameLength")]
+  public float GameLength { get; set; }
+
+  [JsonProperty("getTakedownsInAllLanesEarlyJungleAsLaner")]
+  public int GetTakedownsInAllLanesEarlyJungleAsLaner { get; set; }
+
+  [JsonProperty("goldPerMinute")]
+  public float GoldPerMinute { get; set; }
+
+  [JsonProperty("hadOpenNexus")]
+  public int HadOpenNexus { get; set; }
+
+  [JsonProperty("immobilizeAndKillWithAlly")]
+  public int ImmobilizeAndKillWithAlly { get; set; }
+
+  [JsonProperty("initialBuffCount")]
+  public int InitialBuffCount { get; set; }
+
+  [JsonProperty("initialCrabCount")]
+  public int InitialCrabCount { get; set; }
+
+  [JsonProperty("jungleCsBefore10Minutes")]
+  public float JungleCsBefore10Minutes { get; set; }
+
+  [JsonProperty("junglerTakedownsNearDamagedEpicMonster")]
+  public int JunglerTakedownsNearDamagedEpicMonster { get; set; }
+
+  [JsonProperty("kda")]
+  public float Kda { get; set; }
+
+  [JsonProperty("killAfterHiddenWithAlly")]
+  public int KillAfterHiddenWithAlly { get; set; }
+
+  [JsonProperty("killedChampTookFullTeamDamageSurvived")]
+  public int KilledChampTookFullTeamDamageSurvived { get; set; }
+
+  [JsonProperty("killingSprees")]
+  public int KillingSprees { get; set; }
+
+  [JsonProperty("killParticipation")]
+  public float KillParticipation { get; set; }
+
+  [JsonProperty("killsNearEnemyTurret")]
+  public int KillsNearEnemyTurret { get; set; }
+
+  [JsonProperty("killsOnOtherLanesEarlyJungleAsLaner")]
+  public int KillsOnOtherLanesEarlyJungleAsLaner { get; set; }
+
+  [JsonProperty("killsOnRecentlyHealedByAramPack")]
+  public int KillsOnRecentlyHealedByAramPack { get; set; }
+
+  [JsonProperty("killsUnderOwnTurret")]
+  public int KillsUnderOwnTurret { get; set; }
+
+  [JsonProperty("killsWithHelpFromEpicMonster")]
+  public int KillsWithHelpFromEpicMonster { get; set; }
+
+  [JsonProperty("knockEnemyIntoTeamAndKill")]
+  public int KnockEnemyIntoTeamAndKill { get; set; }
+
+  [JsonProperty("kTurretsDestroyedBeforePlatesFall")]
+  public int KTurretsDestroyedBeforePlatesFall { get; set; }
+
+  [JsonProperty("landSkillShotsEarlyGame")]
+  public int LandSkillShotsEarlyGame { get; set; }
+
+  [JsonProperty("laneMinionsFirst10Minutes")]
+  public int LaneMinionsFirst10Minutes { get; set; }
+
+  [JsonProperty("lostAnInhibitor")]
+  public int LostAnInhibitor { get; set; }
+
+  [JsonProperty("maxKillDeficit")]
+  public int MaxKillDeficit { get; set; }
+
+  [JsonProperty("mejaisFullStackInTime")]
+  public int MejaisFullStackInTime { get; set; }
+
+  [JsonProperty("moreEnemyJungleThanOpponent")]
+  public float MoreEnemyJungleThanOpponent { get; set; }
+
+  [JsonProperty("multiKillOneSpell")]
+  public int MultiKillOneSpell { get; set; }
+
+  [JsonProperty("multikills")]
+  public int Multikills { get; set; }
+
+  [JsonProperty("multikillsAfterAggressiveFlash")]
+  public int MultikillsAfterAggressiveFlash { get; set; }
+
+  [JsonProperty("multiTurretRiftHeraldCount")]
+  public int MultiTurretRiftHeraldCount { get; set; }
+
+  [JsonProperty("outerTurretExecutesBefore10Minutes")]
+  public int OuterTurretExecutesBefore10Minutes { get; set; }
+
+  [JsonProperty("outnumberedKills")]
+  public int OutnumberedKills { get; set; }
+
+  [JsonProperty("outnumberedNexusKill")]
+  public int OutnumberedNexusKill { get; set; }
+
+  [JsonProperty("perfectDragonSoulsTaken")]
+  public int PerfectDragonSoulsTaken { get; set; }
+
+  [JsonProperty("perfectGame")]
+  public int PerfectGame { get; set; }
+
+  [JsonProperty("pickKillWithAlly")]
+  public int PickKillWithAlly { get; set; }
+
+  [JsonProperty("poroExplosions")]
+  public int PoroExplosions { get; set; }
+
+  [JsonProperty("quickCleanse")]
+  public int QuickCleanse { get; set; }
+
+  [JsonProperty("quickFirstTurret")]
+  public int QuickFirstTurret { get; set; }
+
+  [JsonProperty("quickSoloKills")]
+  public int QuickSoloKills { get; set; }
+
+  [JsonProperty("riftHeraldTakedowns")]
+  public int RiftHeraldTakedowns { get; set; }
+
+  [JsonProperty("saveAllyFromDeath")]
+  public int SaveAllyFromDeath { get; set; }
+
+  [JsonProperty("scuttleCrabKills")]
+  public int ScuttleCrabKills { get; set; }
+
+  [JsonProperty("shortestTimeToAceFromFirstTakedown")]
+  public float ShortestTimeToAceFromFirstTakedown { get; set; }
+
+  [JsonProperty("skillshotsDodged")]
+  public int SkillshotsDodged { get; set; }
+
+  [JsonProperty("skillshotsHit")]
+  public int SkillshotsHit { get; set; }
+
+  [JsonProperty("snowballsHit")]
+  public int SnowballsHit { get; set; }
+
+  [JsonProperty("soloBaronKills")]
+  public int SoloBaronKills { get; set; }
+
+  [JsonProperty("SWARM_DefeatAatrox")]
+  public int SwarmDefeatAatrox { get; set; }
+
+  [JsonProperty("SWARM_DefeatBriar")]
+  public int SwarmDefeatBriar { get; set; }
+
+  [JsonProperty("SWARM_DefeatMiniBosses")]
+  public int SwarmDefeatMiniBosses { get; set; }
+
+  [JsonProperty("SWARM_EvolveWeapon")]
+  public int SwarmEvolveWeapon { get; set; }
+
+  [JsonProperty("SWARM_Have3Passives")]
+  public int SwarmHave3Passives { get; set; }
+
+  [JsonProperty("SWARM_KillEnemy")]
+  public int SwarmKillEnemy { get; set; }
+
+  [JsonProperty("SWARM_PickupGold")]
+  public float SwarmPickupGold { get; set; }
+
+  [JsonProperty("SWARM_ReachLevel50")]
+  public int SwarmReachLevel50 { get; set; }
+
+  [JsonProperty("SWARM_Survive15Min")]
+  public int SwarmSurvive15Min { get; set; }
+
+  [JsonProperty("SWARM_WinWith5EvolvedWeapons")]
+  public int SwarmWinWith5EvolvedWeapons { get; set; }
+
+  [JsonProperty("soloKills")]
+  public int SoloKills { get; set; }
+
+  [JsonProperty("stealthWardsPlaced")]
+  public int StealthWardsPlaced { get; set; }
+
+  [JsonProperty("survivedSingleDigitHpCount")]
+  public int SurvivedSingleDigitHpCount { get; set; }
+
+  [JsonProperty("survivedThreeImmobilizesInFight")]
+  public int SurvivedThreeImmobilizesInFight { get; set; }
+
+  [JsonProperty("takedownOnFirstTurret")]
+  public int TakedownOnFirstTurret { get; set; }
+
+  [JsonProperty("takedowns")]
+  public int Takedowns { get; set; }
+
+  [JsonProperty("takedownsAfterGainingLevelAdvantage")]
+  public int TakedownsAfterGainingLevelAdvantage { get; set; }
+
+  [JsonProperty("takedownsBeforeJungleMinionSpawn")]
+  public int TakedownsBeforeJungleMinionSpawn { get; set; }
+
+  [JsonProperty("takedownsFirstXMinutes")]
+  public int TakedownsFirstXMinutes { get; set; }
+
+  [JsonProperty("takedownsInAlcove")]
+  public int TakedownsInAlcove { get; set; }
+
+  [JsonProperty("takedownsInEnemyFountain")]
+  public int TakedownsInEnemyFountain { get; set; }
+
+  [JsonProperty("teamBaronKills")]
+  public int TeamBaronKills { get; set; }
+
+  [JsonProperty("teamDamagePercentage")]
+  public float TeamDamagePercentage { get; set; }
+
+  [JsonProperty("teamElderDragonKills")]
+  public int TeamElderDragonKills { get; set; }
+
+  [JsonProperty("teamRiftHeraldKills")]
+  public int TeamRiftHeraldKills { get; set; }
+
+  [JsonProperty("tookLargeDamageSurvived")]
+  public int TookLargeDamageSurvived { get; set; }
+
+  [JsonProperty("turretPlatesTaken")]
+  public int TurretPlatesTaken { get; set; }
+
+  [JsonProperty("turretsTakenWithRiftHerald")]
+  public int TurretsTakenWithRiftHerald { get; set; }
+
+  [JsonProperty("turretTakedowns")]
+  public int TurretTakedowns { get; set; }
+
+  [JsonProperty("twentyMinionsIn3SecondsCount")]
+  public int TwentyMinionsIn3SecondsCount { get; set; }
+
+  [JsonProperty("twoWardsOneSweeperCount")]
+  public int TwoWardsOneSweeperCount { get; set; }
+
+  [JsonProperty("unseenRecalls")]
+  public int UnseenRecalls { get; set; }
+
+  [JsonProperty("visionScorePerMinute")]
+  public float VisionScorePerMinute { get; set; }
+
+  [JsonProperty("wardsGuarded")]
+  public int WardsGuarded { get; set; }
+
+  [JsonProperty("wardTakedowns")]
+  public int WardTakedowns { get; set; }
+
+  [JsonProperty("wardTakedownsBefore20M")]
+  public int WardTakedownsBefore20M { get; set; }
+}
+
+public class MissionsDto
+{
+  [JsonProperty("playerScore0")]
+  public int PlayerScore0 { get; set; }
+
+  [JsonProperty("playerScore1")]
+  public int PlayerScore1 { get; set; }
+
+  [JsonProperty("playerScore2")]
+  public int PlayerScore2 { get; set; }
+
+  [JsonProperty("playerScore3")]
+  public int PlayerScore3 { get; set; }
+
+  [JsonProperty("playerScore4")]
+  public int PlayerScore4 { get; set; }
+
+  [JsonProperty("playerScore5")]
+  public int PlayerScore5 { get; set; }
+
+  [JsonProperty("playerScore6")]
+  public int PlayerScore6 { get; set; }
+
+  [JsonProperty("playerScore7")]
+  public int PlayerScore7 { get; set; }
+
+  [JsonProperty("playerScore8")]
+  public int PlayerScore8 { get; set; }
+
+  [JsonProperty("playerScore9")]
+  public int PlayerScore9 { get; set; }
+
+  [JsonProperty("playerScore10")]
+  public int PlayerScore10 { get; set; }
+
+  [JsonProperty("playerScore11")]
+  public int PlayerScore11 { get; set; }
+}
+
+public class PerksDto
+{
+  [JsonProperty("statPerks")]
+  public PerkStatsDto StatPerks { get; set; } = new();
+
+  [JsonProperty("styles")]
+  public List<PerkStyleDto> Styles { get; set; } = new();
+}
+
+public class PerkStatsDto
+{
+  [JsonProperty("defense")]
+  public int Defense { get; set; }
+
+  [JsonProperty("flex")]
+  public int Flex { get; set; }
+
+  [JsonProperty("offense")]
+  public int Offense { get; set; }
+}
+
+public class PerkStyleDto
+{
+  [JsonProperty("description")]
+  public string Description { get; set; } = string.Empty;
+
+  [JsonProperty("selections")]
+  public List<PerkStyleSelectionDto> Selections { get; set; } = new();
+
+  [JsonProperty("style")]
+  public int Style { get; set; }
+}
+
+public class PerkStyleSelectionDto
+{
+  [JsonProperty("perk")]
+  public int Perk { get; set; }
+
+  [JsonProperty("var1")]
+  public int Var1 { get; set; }
+
+  [JsonProperty("var2")]
+  public int Var2 { get; set; }
+
+  [JsonProperty("var3")]
+  public int Var3 { get; set; }
 }
