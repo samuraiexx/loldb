@@ -33,6 +33,10 @@ public class MatchDataCollectionOrchestrator
       logger.LogInformation("Processing {RegionCount} regions in parallel", matchDataProcessingState.Count);
 
       // Process each region in parallel
+      var retryPolicy = new RetryPolicy(
+        maxNumberOfAttempts: 5,
+        firstRetryInterval: TimeSpan.FromSeconds(5));
+      var taskOptions = new TaskOptions(retryPolicy);
       var regionTasks = matchDataProcessingState.Select(processingState => context.CallActivityAsync<MatchDataProcessingState>(
               "CollectMatchDataActivity",
               processingState
