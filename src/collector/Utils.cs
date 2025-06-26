@@ -1,4 +1,6 @@
 
+using Microsoft.DurableTask;
+
 class Utils
 {
   public static List<UnitToProcess> GetAllUnitsToProcess()
@@ -83,5 +85,13 @@ class Utils
   public static bool ShouldStopForRateLimit(TimeSpan waitTime)
   {
     return waitTime > ActivityConstants.ShortRateLimitThreshold;
+  }
+
+  public static TaskOptions GetTaskOptions()
+  {
+    var retryPolicy = new RetryPolicy(
+      maxNumberOfAttempts: 5,
+      firstRetryInterval: TimeSpan.FromSeconds(5));
+    return new TaskOptions(retryPolicy);
   }
 }

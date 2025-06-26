@@ -37,7 +37,8 @@ public static class PlayerStatusCollectionOrchestrator
       var regionTasks = playerStatusProcessingState.Select(regionGroup =>
           context.CallActivityAsync<PlayerStatusProcessingState>(
               "PlayerStatusCollectionActivity",
-              regionGroup
+              regionGroup,
+              Utils.GetTaskOptions()
           )
       ).ToArray();
 

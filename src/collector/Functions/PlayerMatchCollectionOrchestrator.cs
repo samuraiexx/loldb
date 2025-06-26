@@ -43,7 +43,8 @@ public class PlayerMatchCollectionOrchestrator
       var regionTasks = PlayerMatchProcessingState.Select(regionGroup =>
           context.CallActivityAsync<PlayerMatchProcessingState>(
               "CollectMatchesForDomainActivity",
-              regionGroup
+              regionGroup,
+              Utils.GetTaskOptions()
           )
       ).ToArray();
 
