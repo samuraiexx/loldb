@@ -316,12 +316,16 @@ public class ParticipantDto
   // Ping-related fields
   [JsonProperty("allInPings")]
   public int AllInPings { get; set; }
-
   [JsonProperty("assistMePings")]
   public int AssistMePings { get; set; }
 
+  [JsonProperty("basicPings")]
+  public int BasicPings { get; set; }
   [JsonProperty("commandPings")]
   public int CommandPings { get; set; }
+
+  [JsonProperty("dangerPings")]
+  public int DangerPings { get; set; }
 
   [JsonProperty("enemyMissingPings")]
   public int EnemyMissingPings { get; set; }
@@ -340,9 +344,11 @@ public class ParticipantDto
 
   [JsonProperty("onMyWayPings")]
   public int OnMyWayPings { get; set; }
-
   [JsonProperty("pushPings")]
   public int PushPings { get; set; }
+
+  [JsonProperty("retreatPings")]
+  public int RetreatPings { get; set; }
 
   [JsonProperty("visionClearedPings")]
   public int VisionClearedPings { get; set; }
@@ -660,9 +666,14 @@ public class ParticipantDto
 
   [JsonProperty("playerAugment3")]
   public int PlayerAugment3 { get; set; }
-
   [JsonProperty("playerAugment4")]
   public int PlayerAugment4 { get; set; }
+
+  [JsonProperty("playerAugment5")]
+  public int PlayerAugment5 { get; set; }
+
+  [JsonProperty("playerAugment6")]
+  public int PlayerAugment6 { get; set; }
 
   [JsonProperty("playerSubteamId")]
   public int PlayerSubteamId { get; set; }
@@ -735,6 +746,12 @@ public class TeamDto
 
   [JsonProperty("bans")]
   public List<BanDto> Bans { get; set; } = new();
+
+  [JsonProperty("objectives")]
+  public ObjectivesDto? Objectives { get; set; }
+
+  [JsonProperty("feats")]
+  public FeatsDto? Feats { get; set; }
 }
 
 public class BanDto
@@ -744,6 +761,60 @@ public class BanDto
 
   [JsonProperty("pickTurn")]
   public int PickTurn { get; set; }
+}
+
+public class ObjectivesDto
+{
+  [JsonProperty("baron")]
+  public ObjectiveDto? Baron { get; set; }
+
+  [JsonProperty("champion")]
+  public ObjectiveDto? Champion { get; set; }
+
+  [JsonProperty("dragon")]
+  public ObjectiveDto? Dragon { get; set; }
+
+  [JsonProperty("horde")]
+  public ObjectiveDto? Horde { get; set; }
+
+  [JsonProperty("inhibitor")]
+  public ObjectiveDto? Inhibitor { get; set; }
+
+  [JsonProperty("riftHerald")]
+  public ObjectiveDto? RiftHerald { get; set; }
+
+  [JsonProperty("tower")]
+  public ObjectiveDto? Tower { get; set; }
+
+  [JsonProperty("atakhan")]
+  public ObjectiveDto? Atakhan { get; set; }
+}
+
+public class ObjectiveDto
+{
+  [JsonProperty("first")]
+  public bool First { get; set; }
+
+  [JsonProperty("kills")]
+  public int Kills { get; set; }
+}
+
+public class FeatsDto
+{
+  [JsonProperty("EPIC_MONSTER_KILL")]
+  public FeatDto? EpicMonsterKill { get; set; }
+
+  [JsonProperty("FIRST_BLOOD")]
+  public FeatDto? FirstBlood { get; set; }
+
+  [JsonProperty("FIRST_TURRET")]
+  public FeatDto? FirstTurret { get; set; }
+}
+
+public class FeatDto
+{
+  [JsonProperty("featState")]
+  public int FeatState { get; set; }
 }
 
 // HTTP Request Models
@@ -768,27 +839,27 @@ public class ChallengesDto
 
   [JsonProperty("controlWardTimeCoverageInRiverOrEnemyHalf")]
   public float ControlWardTimeCoverageInRiverOrEnemyHalf { get; set; }
-
   [JsonProperty("earliestBaron")]
   public int EarliestBaron { get; set; }
 
   [JsonProperty("earliestDragonTakedown")]
-  public int EarliestDragonTakedown { get; set; }
+  public float EarliestDragonTakedown { get; set; }
 
   [JsonProperty("earliestElderDragon")]
   public int EarliestElderDragon { get; set; }
 
   [JsonProperty("earlyLaningPhaseGoldExpAdvantage")]
   public int EarlyLaningPhaseGoldExpAdvantage { get; set; }
-
   [JsonProperty("fasterSupportQuestCompletion")]
   public int FasterSupportQuestCompletion { get; set; }
 
   [JsonProperty("fastestLegendary")]
-  public int FastestLegendary { get; set; }
-
+  public float FastestLegendary { get; set; }
   [JsonProperty("hadAfkTeammate")]
   public int HadAfkTeammate { get; set; }
+
+  [JsonProperty("HealFromMapSources")]
+  public int HealFromMapSources { get; set; }
 
   [JsonProperty("highestChampionDamage")]
   public int HighestChampionDamage { get; set; }
