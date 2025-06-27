@@ -387,15 +387,13 @@ public class CosmosDbService : ICosmosDbService
 
     return matches;
   }
-
   public async Task DeleteMatchAsync(string matchId, string region)
   {
-    var containerName = $"match_{region.ToLower()}";
-    var container = await GetOrCreateContainerAsync(containerName);
+    var container = await GetContainerAsync("matches");
 
     try
     {
-      await container.DeleteItemAsync<MatchDocument>(matchId, new PartitionKey(matchId));
+      await container.DeleteItemAsync<MatchDocument>(matchId, new PartitionKey(region));
       _logger.LogInformation("Deleted match {MatchId} from region {Region}", matchId, region);
     }
     catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
