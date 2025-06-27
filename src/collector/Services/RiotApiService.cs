@@ -232,6 +232,13 @@ public class RiotApiService : IRiotApiService
         }
       }
 
+      // Handle 404 - match not found
+      if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+      {
+        _logger.LogWarning("Match {MatchId} not found (404) on {Domain}", matchId, domain);
+        return (null, rateLimitInfo);
+      }
+
       response.EnsureSuccessStatusCode();
 
       var content = await response.Content.ReadAsStringAsync();

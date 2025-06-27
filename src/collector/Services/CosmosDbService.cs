@@ -20,6 +20,7 @@ public interface ICosmosDbService
   Task UpsertMatchAsync(MatchDocument match);
   Task<BatchUpsertResult> BatchUpsertMatchesAsync(List<MatchDocument> matches, string region);
   Task<List<MatchDocument>> GetUnprocessedMatchesAsync(string region, int maxCount = 120, DateTime? maxCreatedTime = null);
+  Task DeleteMatchAsync(string matchId, string region);
 }
 
 public class CosmosDbService : ICosmosDbService
@@ -385,5 +386,26 @@ public class CosmosDbService : ICosmosDbService
         matches.Count, region, maxCreatedTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "none");
 
     return matches;
+  }
+
+  public async Task DeleteMatchAsync(string matchId, string region)
+  {
+    var containerName = $"match_{region.ToLower()}";
+    var container = await GetOrCreateContainerAsync(containerName);
+
+    try
+    {
+      await container.DeleteItemAsync<MatchDocument>(matchId, new PartitionKey(matchId));
+      _logger.LogInformation("Deleted match {MatchId} from region {Region}", matchId, region);
+    }
+    catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+    {
+      _logger.LogWarning("Match {MatchId} not found in database for region {Region}", matchId, region);
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Error deleting match {MatchId} from region {Region}", matchId, region);
+      throw;
+    }
   }
 }

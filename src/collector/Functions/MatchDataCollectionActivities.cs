@@ -91,7 +91,15 @@ public class MatchDataCollectionActivities
           break;
         }
 
-        match.MatchData = matchData!;
+        // If matchData is null, it means the match was not found (404)
+        if (matchData == null)
+        {
+          _logger.LogWarning("Match {MatchId} not found (404), deleting from database for region {Region}", match.MatchId, region);
+          await _cosmosDbService.DeleteMatchAsync(match.MatchId, region);
+          continue; // Skip to next match
+        }
+
+        match.MatchData = matchData;
         match.Processed = true;
         processedMatches.Add(match);
 
