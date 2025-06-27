@@ -839,17 +839,15 @@ public class ChallengesDto
 
   [JsonProperty("baronBuffGoldAdvantageOverThreshold")]
   public int BaronBuffGoldAdvantageOverThreshold { get; set; }
-
   [JsonProperty("controlWardTimeCoverageInRiverOrEnemyHalf")]
   public float ControlWardTimeCoverageInRiverOrEnemyHalf { get; set; }
   [JsonProperty("earliestBaron")]
-  public int EarliestBaron { get; set; }
+  public float EarliestBaron { get; set; }
 
   [JsonProperty("earliestDragonTakedown")]
   public float EarliestDragonTakedown { get; set; }
-
   [JsonProperty("earliestElderDragon")]
-  public int EarliestElderDragon { get; set; }
+  public float EarliestElderDragon { get; set; }
 
   [JsonProperty("earlyLaningPhaseGoldExpAdvantage")]
   public int EarlyLaningPhaseGoldExpAdvantage { get; set; }
@@ -908,9 +906,8 @@ public class ChallengesDto
 
   [JsonProperty("teleportTakedowns")]
   public int TeleportTakedowns { get; set; }
-
   [JsonProperty("thirdInhibitorDestroyedTime")]
-  public int ThirdInhibitorDestroyedTime { get; set; }
+  public float ThirdInhibitorDestroyedTime { get; set; }
 
   [JsonProperty("threeWardsOneSweeperCount")]
   public int ThreeWardsOneSweeperCount { get; set; }
