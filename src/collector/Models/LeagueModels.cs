@@ -238,6 +238,9 @@ public class MetadataDto
 
 public class InfoDto
 {
+  [JsonProperty("endOfGameResult")]
+  public string EndOfGameResult { get; set; } = string.Empty;
+
   [JsonProperty("gameCreation")]
   public long GameCreation { get; set; }
 
@@ -294,12 +297,14 @@ public class ParticipantDto
 
   [JsonProperty("teamId")]
   public int TeamId { get; set; }
-
   [JsonProperty("championId")]
   public int ChampionId { get; set; }
 
   [JsonProperty("championName")]
   public string ChampionName { get; set; } = string.Empty;
+
+  [JsonProperty("championSkinId")]
+  public int ChampionSkinId { get; set; }
 
   [JsonProperty("kills")]
   public int Kills { get; set; }
@@ -616,42 +621,40 @@ public class ParticipantDto
 
   [JsonProperty("totalTimeSpentDead")]
   public int TotalTimeSpentDead { get; set; }
-
   // Player scores (custom game modes)
-  [JsonProperty("playerScore0")]
+  [JsonProperty("PlayerScore0")]
   public int PlayerScore0 { get; set; }
 
-  [JsonProperty("playerScore1")]
+  [JsonProperty("PlayerScore1")]
   public int PlayerScore1 { get; set; }
 
-  [JsonProperty("playerScore2")]
+  [JsonProperty("PlayerScore2")]
   public int PlayerScore2 { get; set; }
 
-  [JsonProperty("playerScore3")]
+  [JsonProperty("PlayerScore3")]
   public int PlayerScore3 { get; set; }
-
-  [JsonProperty("playerScore4")]
+  [JsonProperty("PlayerScore4")]
   public int PlayerScore4 { get; set; }
 
-  [JsonProperty("playerScore5")]
+  [JsonProperty("PlayerScore5")]
   public int PlayerScore5 { get; set; }
 
-  [JsonProperty("playerScore6")]
+  [JsonProperty("PlayerScore6")]
   public int PlayerScore6 { get; set; }
 
-  [JsonProperty("playerScore7")]
+  [JsonProperty("PlayerScore7")]
   public int PlayerScore7 { get; set; }
 
-  [JsonProperty("playerScore8")]
+  [JsonProperty("PlayerScore8")]
   public int PlayerScore8 { get; set; }
 
-  [JsonProperty("playerScore9")]
+  [JsonProperty("PlayerScore9")]
   public int PlayerScore9 { get; set; }
 
-  [JsonProperty("playerScore10")]
+  [JsonProperty("PlayerScore10")]
   public int PlayerScore10 { get; set; }
 
-  [JsonProperty("playerScore11")]
+  [JsonProperty("PlayerScore11")]
   public int PlayerScore11 { get; set; }
 
   // Placement and augments
@@ -852,14 +855,14 @@ public class ChallengesDto
   public int EarlyLaningPhaseGoldExpAdvantage { get; set; }
   [JsonProperty("fasterSupportQuestCompletion")]
   public int FasterSupportQuestCompletion { get; set; }
-
   [JsonProperty("fastestLegendary")]
   public float FastestLegendary { get; set; }
+
   [JsonProperty("hadAfkTeammate")]
   public int HadAfkTeammate { get; set; }
 
   [JsonProperty("HealFromMapSources")]
-  public int HealFromMapSources { get; set; }
+  public float HealFromMapSources { get; set; }
 
   [JsonProperty("highestChampionDamage")]
   public int HighestChampionDamage { get; set; }
