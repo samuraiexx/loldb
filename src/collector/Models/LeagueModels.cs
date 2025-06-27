@@ -864,12 +864,11 @@ public class ChallengesDto
 
   [JsonProperty("baronTakedowns")]
   public int BaronTakedowns { get; set; }
-
   [JsonProperty("blastConeOppositeOpponentCount")]
   public int BlastConeOppositeOpponentCount { get; set; }
 
   [JsonProperty("bountyGold")]
-  public int BountyGold { get; set; }
+  public float BountyGold { get; set; }
 
   [JsonProperty("buffsStolen")]
   public int BuffsStolen { get; set; }
