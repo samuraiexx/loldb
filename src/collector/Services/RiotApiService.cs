@@ -2,17 +2,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-public interface IRiotApiService
-{
-  Task<(List<LeagueEntryDTO> entries, RateLimitInfo rateLimitInfo)> GetLeagueEntriesAsync(
-      string region, string queueType, string tier, string division, int page = 1);
-  Task<(List<string> matchIds, RateLimitInfo rateLimitInfo)> GetMatchIdsByPuuidAsync(
-      string domain, string puuid, long? startTime = null, long? endTime = null,
-      string matchType = "ranked", int start = 0, int count = 20);
-  Task<(MatchDto? match, RateLimitInfo rateLimitInfo)> GetMatchAsync(string domain, string matchId);
-}
-
-public class RiotApiService : IRiotApiService
+public class RiotApiService
 {
   private readonly HttpClient _httpClient;
   private readonly ILogger<RiotApiService> _logger;

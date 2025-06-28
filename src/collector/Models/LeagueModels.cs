@@ -1,6 +1,14 @@
 using System.Security;
 using Newtonsoft.Json;
 
+public class BatchUpsertResult
+{
+  public int TotalProcessed { get; set; }
+  public int TotalErrors { get; set; }
+  public bool HasErrors => TotalErrors > 0;
+  public bool IsSuccess => TotalErrors == 0;
+}
+
 public class LeagueEntryDTO
 {
   [JsonProperty("leagueId")]

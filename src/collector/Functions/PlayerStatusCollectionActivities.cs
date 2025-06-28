@@ -3,17 +3,17 @@ using Microsoft.Extensions.Logging;
 
 public class PlayerStatusCollectionActivities
 {
-  private readonly IRiotApiService _riotApiService;
-  private readonly ICosmosDbService _cosmosDbService;
+  private readonly RiotApiService _riotApiService;
+  private readonly AzureDataLakeService _dataService;
   private readonly ILogger<PlayerStatusCollectionActivities> _logger;
 
   public PlayerStatusCollectionActivities(
-      IRiotApiService riotApiService,
-      ICosmosDbService cosmosDbService,
+      RiotApiService riotApiService,
+      AzureDataLakeService dataService,
       ILogger<PlayerStatusCollectionActivities> logger)
   {
     _riotApiService = riotApiService;
-    _cosmosDbService = cosmosDbService;
+    _dataService = dataService;
     _logger = logger;
   }
   [Function("PlayerStatusCollectionActivity")]
@@ -24,7 +24,7 @@ public class PlayerStatusCollectionActivities
         region, processingState.ProcessingScope.Count);
 
     var activityStartTime = DateTime.UtcNow;
-    await _cosmosDbService.InitializeAsync();
+    await _dataService.InitializeAsync();
 
     var allPlayerEntries = new List<(LeagueEntryDTO entry, string queueType, string region)>();
     var processedUnitsCount = 0;
@@ -184,7 +184,7 @@ public class PlayerStatusCollectionActivities
     // Batch upsert all documents
     if (playerStatsDocuments.Any())
     {
-      await _cosmosDbService.BatchUpsertPlayerStatsAsync(playerStatsDocuments, queueType, region);
+      await _dataService.BatchUpsertPlayerStatsAsync(playerStatsDocuments, queueType, region);
       _logger.LogDebug("Batch processed {Processed} entries, {Errors} errors for {QueueType} in {Region}",
           processed, errors, queueType, region);
     }

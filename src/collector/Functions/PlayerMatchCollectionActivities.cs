@@ -4,17 +4,17 @@ using Microsoft.Extensions.Logging;
 
 public class PlayerMatchCollectionActivities
 {
-  private readonly IRiotApiService _riotApiService;
-  private readonly ICosmosDbService _cosmosDbService;
+  private readonly RiotApiService _riotApiService;
+  private readonly AzureDataLakeService _dataService;
   private readonly ILogger<PlayerMatchCollectionActivities> _logger;
 
   public PlayerMatchCollectionActivities(
-      IRiotApiService riotApiService,
-      ICosmosDbService cosmosDbService,
+      RiotApiService riotApiService,
+      AzureDataLakeService dataService,
       ILogger<PlayerMatchCollectionActivities> logger)
   {
     _riotApiService = riotApiService;
-    _cosmosDbService = cosmosDbService;
+    _dataService = dataService;
     _logger = logger;
   }
 
@@ -26,11 +26,11 @@ public class PlayerMatchCollectionActivities
         matchRegion, processingState.ProcessingScope.Count, processingState.MaxMatchesPerUnit);
     var activityStartTime = DateTime.UtcNow;
 
-    var initResult = await _cosmosDbService.InitializeAsync();
+    var initResult = await _dataService.InitializeAsync();
     if (!initResult)
     {
-      _logger.LogError("Failed to initialize Cosmos DB service for match region {MatchRegion}", matchRegion);
-      throw new InvalidOperationException("Cosmos DB initialization failed. Check connection configuration and credentials.");
+      _logger.LogError("Failed to initialize data service for match region {MatchRegion}", matchRegion);
+      throw new InvalidOperationException("Data service initialization failed. Check connection configuration and credentials.");
     }
 
     var allMatchDocuments = new List<MatchDocument>();
@@ -48,7 +48,7 @@ public class PlayerMatchCollectionActivities
       _logger.LogInformation("Processing unit: {Region} {QueueType} {Tier} {Division}",
           unit.Region, unit.QueueType, unit.Tier, unit.Division);      // Get ranked PUUIDs for this unit
 
-      var puuids = await _cosmosDbService.GetRankedPuuidsAsync(unit.QueueType, unit.Tier, unit.Division, unit.Region);
+      var puuids = await _dataService.GetRankedPuuidsAsync(unit.QueueType, unit.Tier, unit.Division, unit.Region);
       _logger.LogInformation("Found {Count} PUUIDs for {Region} {QueueType} {Tier} {Division}",
           puuids.Count, unit.Region, unit.QueueType, unit.Tier, unit.Division);
 
@@ -137,7 +137,7 @@ public class PlayerMatchCollectionActivities
         var matches = regionGroup.ToList();
 
         _logger.LogInformation("Batch upserting {Count} matches for region {Region}", matches.Count, region);
-        var result = await _cosmosDbService.BatchUpsertMatchesAsync(matches, region);
+        var result = await _dataService.BatchUpsertMatchesAsync(matches, region);
 
         if (result.HasErrors)
         {

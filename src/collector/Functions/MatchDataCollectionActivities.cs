@@ -4,17 +4,17 @@ using Microsoft.Extensions.Logging;
 
 public class MatchDataCollectionActivities
 {
-  private readonly IRiotApiService _riotApiService;
-  private readonly ICosmosDbService _cosmosDbService;
+  private readonly RiotApiService _riotApiService;
+  private readonly AzureDataLakeService _dataService;
   private readonly ILogger<MatchDataCollectionActivities> _logger;
 
   public MatchDataCollectionActivities(
-      IRiotApiService riotApiService,
-      ICosmosDbService cosmosDbService,
+      RiotApiService riotApiService,
+      AzureDataLakeService dataService,
       ILogger<MatchDataCollectionActivities> logger)
   {
     _riotApiService = riotApiService;
-    _cosmosDbService = cosmosDbService;
+    _dataService = dataService;
     _logger = logger;
   }
 
@@ -23,7 +23,7 @@ public class MatchDataCollectionActivities
   {
     _logger.LogInformation("Getting total match count per region");
 
-    await _cosmosDbService.InitializeAsync();
+    await _dataService.InitializeAsync();
 
     var totalCountPerRegion = new Dictionary<string, int>();
 
@@ -38,7 +38,7 @@ public class MatchDataCollectionActivities
       var totalCount = 0;
       foreach (var region in regions)
       {
-        var unprocessedMatches = await _cosmosDbService.GetUnprocessedMatchesAsync(region, int.MaxValue);
+        var unprocessedMatches = await _dataService.GetUnprocessedMatchesAsync(region, int.MaxValue);
         totalCount += unprocessedMatches.Count;
       }
 
@@ -55,7 +55,7 @@ public class MatchDataCollectionActivities
     _logger.LogInformation("Processing match data for region {MatchRegion}", processingState.MatchRegion);
 
     var activityStartTime = DateTime.UtcNow;
-    await _cosmosDbService.InitializeAsync();
+    await _dataService.InitializeAsync();
 
     // Get the regions that map to this match region
     var regions = Constants.RegionToMatchRegion
@@ -75,7 +75,7 @@ public class MatchDataCollectionActivities
       }
 
       // Get unprocessed matches for this region
-      var matches = await _cosmosDbService.GetUnprocessedMatchesAsync(region, Utils.ActivityConstants.MaxMatchesToFetch, processingState.MaxCreatedOn);
+      var matches = await _dataService.GetUnprocessedMatchesAsync(region, Utils.ActivityConstants.MaxMatchesToFetch, processingState.MaxCreatedOn);
       var isRateLimited = false;
       _logger.LogInformation("Retrieved {Count} unprocessed matches for region {Region}", matches.Count, region);
 
@@ -95,7 +95,7 @@ public class MatchDataCollectionActivities
         if (matchData == null)
         {
           _logger.LogWarning("Match {MatchId} not found (404), deleting from database for region {Region}", match.MatchId, region);
-          await _cosmosDbService.DeleteMatchAsync(match.MatchId, region);
+          await _dataService.DeleteMatchAsync(match.MatchId, region);
           continue; // Skip to next match
         }
 
@@ -124,7 +124,7 @@ public class MatchDataCollectionActivities
         var matches = regionGroup.ToList();
 
         _logger.LogInformation("Batch upserting {Count} matches for region {Region}", matches.Count, region);
-        var result = await _cosmosDbService.BatchUpsertMatchesAsync(matches, region);
+        var result = await _dataService.BatchUpsertMatchesAsync(matches, region);
 
         if (result.HasErrors)
         {
