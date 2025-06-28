@@ -612,14 +612,8 @@ public class AzureDataLakeService
         // Create a new memory stream for each attempt to avoid position issues
         using var stream = new MemoryStream(data);
         
-        // Use DataLakeFileUploadOptions for better control
-        var uploadOptions = new DataLakeFileUploadOptions
-        {
-          Overwrite = true,
-          Close = true // Ensure the file is properly closed after upload
-        };
-        
-        await fileClient.UploadAsync(stream, uploadOptions);
+        // Use simple overwrite parameter
+        await fileClient.UploadAsync(stream, overwrite: true);
         return; // Success, exit retry loop
       }
       catch (RequestFailedException ex) when (ex.ErrorCode == "InvalidFlushPosition" && attempt < maxRetries)
@@ -642,13 +636,7 @@ public class AzureDataLakeService
           await Task.Delay(50); // Small delay to ensure deletion is processed
           
           using var stream = new MemoryStream(data);
-          var uploadOptions = new DataLakeFileUploadOptions
-          {
-            Overwrite = true,
-            Close = true
-          };
-          
-          await fileClient.UploadAsync(stream, uploadOptions);
+          await fileClient.UploadAsync(stream, overwrite: true);
           return;
         }
         catch (Exception deleteEx)
