@@ -23,11 +23,28 @@ public class AzureDataLakeService
   {
     _logger.LogInformation("Initializing Azure Data Lake service");
 
-    // Create file system if it doesn't exist
-    _fileSystemClient = await _dataLakeServiceClient.CreateFileSystemAsync(_fileSystemName);
+    // Get a reference to the file system client
+    _fileSystemClient = _dataLakeServiceClient.GetFileSystemClient(_fileSystemName);
+
+    // Check if the file system already exists
+    var existsResponse = await _fileSystemClient.ExistsAsync();
+
+    if (!existsResponse.Value)
+    {
+      // File system doesn't exist, create it
+      var createResponse = await _dataLakeServiceClient.CreateFileSystemAsync(_fileSystemName);
+      _fileSystemClient = createResponse.Value;
+      _logger.LogInformation("Created new file system '{FileSystemName}'", _fileSystemName);
+    }
+    else
+    {
+      _logger.LogInformation("File system '{FileSystemName}' already exists, using existing one", _fileSystemName);
+    }
+
     if (_fileSystemClient == null)
     {
-      _fileSystemClient = _dataLakeServiceClient.GetFileSystemClient(_fileSystemName);
+      _logger.LogError("Failed to initialize file system client for '{FileSystemName}'", _fileSystemName);
+      return false;
     }
 
     _logger.LogInformation("File system '{FileSystemName}' ready", _fileSystemName);
