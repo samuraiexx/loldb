@@ -177,7 +177,7 @@ public class AzureDataLakeService
     var json = JsonConvert.SerializeObject(playerStats, Formatting.None);
     var data = Encoding.UTF8.GetBytes(json);
 
-    await fileClient.UploadAsync(new MemoryStream(data), overwrite: true);
+    await UploadDataSafelyAsync(fileClient, data, filePath);
 
     _logger.LogDebug("Upserted player stats for {Puuid} in {QueueType} at {Timestamp}",
       playerStats.Puuid, queueType, timestamp.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -325,7 +325,7 @@ public class AzureDataLakeService
       var json = JsonConvert.SerializeObject(match, Formatting.None);
       var data = Encoding.UTF8.GetBytes(json);
 
-      await fileClient.UploadAsync(new MemoryStream(data), overwrite: true);
+      await UploadDataSafelyAsync(fileClient, data, filePath);
 
       _logger.LogDebug("Upserted match {MatchId} for region {Region}", match.MatchId, match.Region);
     }
@@ -551,7 +551,7 @@ public class AzureDataLakeService
       var data = Encoding.UTF8.GetBytes(json);
 
       var fileClient = _fileSystemClient!.GetFileClient(filePath);
-      await fileClient.UploadAsync(new MemoryStream(data), overwrite: true);
+      await UploadDataSafelyAsync(fileClient, data, filePath);
 
       _logger.LogDebug("Successfully upserted match timeline data for match {MatchId} in region {Region}", matchId, region);
     }
@@ -598,5 +598,68 @@ public class AzureDataLakeService
     }
 
     return null;
+  }
+
+  private async Task UploadDataSafelyAsync(DataLakeFileClient fileClient, byte[] data, string filePath)
+  {
+    const int maxRetries = 3;
+    const int baseDelayMs = 100;
+    
+    for (int attempt = 1; attempt <= maxRetries; attempt++)
+    {
+      try
+      {
+        // Create a new memory stream for each attempt to avoid position issues
+        using var stream = new MemoryStream(data);
+        
+        // Use DataLakeFileUploadOptions for better control
+        var uploadOptions = new DataLakeFileUploadOptions
+        {
+          Overwrite = true,
+          Close = true // Ensure the file is properly closed after upload
+        };
+        
+        await fileClient.UploadAsync(stream, uploadOptions);
+        return; // Success, exit retry loop
+      }
+      catch (RequestFailedException ex) when (ex.ErrorCode == "InvalidFlushPosition" && attempt < maxRetries)
+      {
+        _logger.LogWarning("Upload attempt {Attempt} failed for {FilePath} with InvalidFlushPosition. Retrying...", 
+          attempt, filePath);
+        
+        // Exponential backoff with jitter
+        var delay = baseDelayMs * Math.Pow(2, attempt - 1) + new Random().Next(0, 50);
+        await Task.Delay(TimeSpan.FromMilliseconds(delay));
+      }
+      catch (RequestFailedException ex) when (ex.ErrorCode == "PathAlreadyExists" || ex.ErrorCode == "PathConflict")
+      {
+        // File already exists or there's a conflict, try to delete and recreate
+        _logger.LogWarning("Path conflict for {FilePath}, attempting to delete and recreate", filePath);
+        
+        try
+        {
+          await fileClient.DeleteIfExistsAsync();
+          await Task.Delay(50); // Small delay to ensure deletion is processed
+          
+          using var stream = new MemoryStream(data);
+          var uploadOptions = new DataLakeFileUploadOptions
+          {
+            Overwrite = true,
+            Close = true
+          };
+          
+          await fileClient.UploadAsync(stream, uploadOptions);
+          return;
+        }
+        catch (Exception deleteEx)
+        {
+          _logger.LogError(deleteEx, "Failed to delete and recreate file {FilePath}", filePath);
+          throw;
+        }
+      }
+    }
+    
+    // If we get here, all retries failed
+    throw new InvalidOperationException($"Failed to upload file {filePath} after {maxRetries} attempts");
   }
 }
